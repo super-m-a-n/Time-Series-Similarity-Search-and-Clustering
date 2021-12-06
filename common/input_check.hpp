@@ -15,8 +15,10 @@ bool check_init_args(int argc, const char ** argv, std::string & input_file, std
 
 // checks for correct input args from terminal and initializes program parameters if so (for clustering)
 bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & config_file, std::string & output_file, bool & complete, std::string & method);
+
 // checks for correct input args from config file and initializes program parameters if so (for clustering for the config file)
 bool check_init_config_args(std::string & config_file, int & K, int & L, int & k, int & M, int & d1, int & probes);
+
 // opens and reads given config file and initializes program parameters K,L,k,M,d1,probes 
 bool read_config_file(std::string & config_file, int & K, int & L, int & k, int & M, int & d1, int & probes);
 
@@ -24,5 +26,11 @@ bool read_config_file(std::string & config_file, int & K, int & L, int & k, int 
 bool is_integer(const char * string);
 // opens and reads given input file and initializes number of points n, and dimension of points d
 bool read_input_file(std::string & input_file, int & n, int & d);
+
+//////////////////////////////////// PROJECT 2 ////////////////////////////////////////////////
+
+// checks for correct input args from terminal and initializes program parameters if so (for curve search)
+bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & query_file, int & k, int & d1, int & L, int & M, int & probes, 
+	std::string & output_file, std::string & algorithm, std::string & metric, double & delta);
 
 #endif

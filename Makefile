@@ -1,45 +1,32 @@
 CXX=g++
 CXXFLAGS =-Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -std=c++11
-CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder -I./cluster_folder
+CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder #-I./cluster_folder
 OBJS_FOLDER = ./objects 
 OBJ_COMMON =  ./common/object.o ./common/assist_functions.o ./common/h_hash.o ./common/dataset.o ./common/input_check.o
 OBJ_LSH = ./lsh_folder/g_hash.o ./lsh_folder/hash.o ./lsh_folder/lsh_struct.o
 OBJ_HYPERCUBE = ./hypercube_folder/f_hash.o ./hypercube_folder/hypercube_class.o
-OBJ_CLUSTER = ./cluster_folder/cluster_info.o 
-PROGRAMS = lsh cube cluster
+#OBJ_CLUSTER = ./cluster_folder/cluster_info.o 
+PROGRAMS = search
 
 all: $(PROGRAMS) mv_objs
 
-target1: lsh
-
-target2: cube
-
-target3: cluster
+target1: search
 
 mv_objs:
 	mkdir -p $(OBJS_FOLDER)
-	mv -f $(OBJ_CLUSTER) $(OBJS_FOLDER) 2>/dev/null; true
+	#mv -f $(OBJ_CLUSTER) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_HYPERCUBE) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_LSH) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_COMMON) $(OBJS_FOLDER) 2>/dev/null; true
-	mv -f lsh.o $(OBJS_FOLDER) 2>/dev/null; true
-	mv -f cube.o $(OBJS_FOLDER) 2>/dev/null; true
-	mv -f cluster.o $(OBJS_FOLDER) 2>/dev/null; true
+	mv -f search.o $(OBJS_FOLDER) 2>/dev/null; true
 
-
-lsh:  $(OBJ_COMMON) $(OBJ_LSH) lsh.o
-	$(CXX) $(CXXFLAGS) -o lsh lsh.o $(OBJ_COMMON) $(OBJ_LSH)
-
-cube: $(OBJ_COMMON) $(OBJ_HYPERCUBE) cube.o
-	$(CXX) $(CXXFLAGS) -o cube cube.o $(OBJ_COMMON) $(OBJ_HYPERCUBE)
-
-cluster: $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER) cluster.o 
-	$(CXX) $(CXXFLAGS) -o cluster cluster.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER)
+search: $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) search.o 
+	$(CXX) $(CXXFLAGS) -o search search.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH)
 
 .PHONY: clean
 
 clean:
-	rm -rf *.o lsh cube cluster output* $(OBJS_FOLDER)
+	rm -rf *.o search output* $(OBJS_FOLDER)
 
 
 ###############################################################################################################

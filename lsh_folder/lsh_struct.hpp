@@ -9,11 +9,12 @@
 #include "hash.hpp"
 #include "dataset.hpp"
 #include "object.hpp"
+#include "search_method.hpp"
 #include <set>
 
 // class lsh_struct contains all the data structures used by lsh
 // namely L hash-tables
-class lsh_struct
+class lsh_struct : public search_method
 {
 private:
 	hash_table ** lsh_hash_struct;	// an array of pointers to L hashtables
