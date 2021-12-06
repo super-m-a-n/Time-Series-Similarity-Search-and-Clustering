@@ -367,12 +367,12 @@ bool read_input_file(std::string & input_file, int & n, int & d)
 	    		if (line[strlen(line)-1] == '\r')	// remove potential \r character from line read from file
 	    			line[strlen(line)-1] = '\0';
 
-	    		char *str = strtok(line, " ");
+	    		char *str = strtok(line, "\t");
 		      	int i = 0;
 		      	while(str != NULL)
 		      	{
 		      		i++;
-		         	str = strtok(NULL, " ");
+		         	str = strtok(NULL, "\t");
 		      	}
 
 		      	d = i - 1;
@@ -387,6 +387,103 @@ bool read_input_file(std::string & input_file, int & n, int & d)
 	rewind(file_ptr);
 	// close file
 	fclose(file_ptr);
+
+	return true;
+}
+
+// check and set arguments for curve search (incluces check_init_args for lsh and hypercube)
+bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & query_file, int & k, int & d1, int & L, int & M, int & probes, 
+	std::string & output_file, std::string & algorithm, std::string & metric, double & delta)
+{
+	// set default values for the parameters, in case no specific value was given through terminal (all cmd parameters are optional)
+	input_file = "";
+	query_file = "";
+	output_file = "";
+	algorithm = "";
+	metric = "";
+	k = 4;
+	L = 5;
+	d1 = 14;
+	M = 10;
+	probes = 2;
+	delta = 0;
+
+	// cmd input should have an odd number of args (an even number due to ("-x", value) pairs , plus the argv[0])
+	if (argc % 2 == 0)
+		return false;
+	int i = 2;
+	// cmd input should have "-x" at odd positions (x is in {i, q, o, k, L, M, probes, algorithm, metric, delta}) and actual parameter values at even positions
+	while (i < argc)
+	{
+		if (!strcmp(argv[i-1], "-i"))
+		{
+			input_file = argv[i];
+		}
+		else if (!strcmp(argv[i-1], "-q"))
+		{
+			query_file = argv[i];
+		}
+		else if (!strcmp(argv[i-1], "-o"))
+		{
+			output_file = argv[i];
+		}
+		else if (!strcmp(argv[i-1], "-algorithm"))
+		{
+			if (strcmp(argv[i], "LSH") && strcmp(argv[i], "Hypercube") && strcmp(argv[i], "Frechet"))
+				return false;		// algorithm is either LSH or Hypercube or Frechet
+
+			algorithm = argv[i];
+		}
+		else if (!strcmp(argv[i-1], "-metric"))
+		{
+			if (strcmp(argv[i], "discrete") && strcmp(argv[i], "continuous"))
+				return false;		// metric is either discrete or continuous
+			
+			metric = argv[i];
+		}
+		else if (!strcmp(argv[i-1], "-k"))
+		{
+			if (!is_integer(argv[i]) || !atoi(argv[i]))
+				return false;
+
+			// both are set, only one will be used depending on algorithm
+			k = atoi(argv[i]);	
+			d1 = atoi(argv[i]);
+
+		}
+		else if (!strcmp(argv[i-1], "-L"))
+		{
+			if (!is_integer(argv[i]) || !atoi(argv[i]))
+				return false;
+			L = atoi(argv[i]);
+		}
+		else if (!strcmp(argv[i-1], "-M"))
+		{
+			if (!is_integer(argv[i]) || !atoi(argv[i]))
+				return false;
+			M = atoi(argv[i]);
+		}
+		else if (!strcmp(argv[i-1], "-probes"))
+		{
+			if (!is_integer(argv[i]) || !atoi(argv[i]))
+				return false;
+			probes = atoi(argv[i]);
+		}
+		else if (!strcmp(argv[i-1], "-delta"))
+		{
+			if (!atof(argv[i])) // error in string to double conversion
+				return false;
+			delta = atof(argv[i]);
+		}
+		
+		else
+			return false;
+
+		i+=2;
+	}
+
+	if (!algorithm.empty() && algorithm != "Frechet" && !metric.empty())	// metric only to be used with algorithm Frechet
+		return false;
 
 	return true;
 }

@@ -9,6 +9,7 @@
 #include "h_hash.hpp" 
 #include "object.hpp"
 #include "dataset.hpp"
+#include "search_method.hpp"
 #include <queue>
 #include <list>
 #include <set>
@@ -16,7 +17,7 @@
 //An enum type used in the recursion part of the hypercube so that the appropriate action is taken
 enum search_type {kNN, RANGE_SEARCH};
 
-class hypercube{
+class hypercube : public search_method {
 private:
     std::list<const Object*>* cube_array; //every vertex of the hypercube will store Object pointers in a similar fashion to the lsh hashtables
                                     //The array will have size 2^d1 where d1 is the dimension of the cube
@@ -53,7 +54,7 @@ public:
 
     // executes the approximate/exact/ranged nearest neighbors algorithms using given metric function (pointer to function)
 	// and outputs results and execution times in output file
-	bool execute(const Dataset & dataset, Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &));
+	bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &));
 	// runs approximate and exact nearest neighbors using given metric function and write results into file
 	std::vector <std::pair <double, const Object*> > appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &));
 	// run approximate range search using given metric function and save results in a set (with their distances from the query object)

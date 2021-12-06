@@ -38,7 +38,7 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		    if (line[strlen(line)-1] == '\r')	// remove potential \r character from line read from file
 		    	line[strlen(line)-1] = '\0';
 
-		    char *str = strtok(line, " ");
+		    char *str = strtok(line, "\t");
 		    int j = 0;
 
 		    // local variables that will serve as arguments for Object constructor
@@ -55,7 +55,7 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		        }
 		        
 		        j++;
-		        str = strtok(NULL, " ");
+		        str = strtok(NULL, "\t");
 		    }
 
 		    dataset[point_index] = new Object(input_data, object_name);		// create Object

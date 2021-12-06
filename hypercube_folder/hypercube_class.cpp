@@ -32,7 +32,7 @@ void hypercube::import_data(const Dataset& dataset){
 }
 //void print() const;
 
-bool hypercube::execute(const Dataset & dataset, Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &)){
+bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &)){
 
 	std::ofstream file (output_file, std::ios::out);		// open output file for output operations
 	
@@ -46,12 +46,15 @@ bool hypercube::execute(const Dataset & dataset, Dataset & query_dataset, const 
 	double sum_dist_true = 0;
 	double avg_AF = 0;
 	double avg_TF = 0;
+	double tApprAvg = 0;
+	double tTrueAvg = 0;
 	double max_AF = 0;
 	int not_found = 0;
 
 	for (int i = 0; i < num_of_Objects; i++)		// run for each of the query Objects
 	{
-		file << "Query: query Object " << (query_dataset.get_ith_object(i)).get_name() << "\n\n";
+		file << "Query: query Object " << (query_dataset.get_ith_object(i)).get_name() << "\n";
+		file << "Algorithm: Hypercube  \n\n";
 
 		//start timer for lsh
 		auto t_cube_start = std::chrono::high_resolution_clock::now();
@@ -83,8 +86,8 @@ bool hypercube::execute(const Dataset & dataset, Dataset & query_dataset, const 
 				dist_cube = dist;
 				found = true;
 
-				file << "Nearest neighbor-" << index + 1 << " : Point-Object " << object->get_name() << '\n';	//write to file
-				file << "kNN: distanceHypercube : " << dist << '\n';
+				file << "Approxmimate Nearest neighbor-" << index + 1 << " : Object " << object->get_name() << '\n';	//write to file
+				file << "distanceApproximate : " << dist << '\n';
 			}
 			else
 				not_found++;
@@ -94,11 +97,13 @@ bool hypercube::execute(const Dataset & dataset, Dataset & query_dataset, const 
 
 			if ((int) exact_nearest.size() >= index + 1)	// neighbors found may be less than N
 			{
-				double dist = std::get<0>(exact_nearest[index]);		// get distance from query object
+				const Object * object = std::get<1>(exact_nearest[index]);			// get object-neighbor found
+				double dist = std::get<0>(exact_nearest[index]);					// get distance from query object
 				sum_dist_true += dist;
 				dist_true = dist;
 
-				file << "kNN: distanceTrue : " << dist << "\n\n";			// write to file
+				file << "True Nearest neighbor-" << index + 1 << " : Object " << object->get_name() << '\n';
+				file << "distanceTrue : " << dist << "\n\n";			// write to file
 			}
 
 			if (found)
@@ -119,24 +124,34 @@ bool hypercube::execute(const Dataset & dataset, Dataset & query_dataset, const 
 	    file << "tTrue : " << tTrue.count() << "ms\n\n";
 		
 		avg_TF += tCube.count() / tTrue.count();
+		tApprAvg += tCube.count();
+		tTrueAvg += tTrue.count();
 
 		file << "tHypercube / tTrue: " << (double) tCube.count() / (double) tTrue.count() << std::endl;
 
-		file << "R-near neighbors: (R = " << R << ")" << '\n';
+		if (R != 0)	// if given Range for range search is 0 skip range search
+		{
+			file << "R-near neighbors: (R = " << R << ")" << '\n';
 
-		// run approximate range search and write results into file
-		std::list <std::pair <double, const Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
-		
-		for (auto item: R_list){
-			// object is within range, so ass it to the list
-				file << "Point-Object " << (std::get<1>(item))->get_name() << '\n';
-				;
+			// run approximate range search and write results into file
+			std::list <std::pair <double, const Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
+			
+			for (auto item: R_list){
+				// object is within range, so ass it to the list
+					file << "Point-Object " << (std::get<1>(item))->get_name() << '\n';
+					;
+			}
+			R_list.clear();
 		}
-		R_list.clear();
 		file << "\n\n";
 	}
 
-	//print metrics
+	// print metrics to file
+	file << "tApproximateAverage: " << tApprAvg/num_of_Objects << '\n';
+	file << "tTrueAverage: " << tTrueAvg/num_of_Objects << '\n';
+	file << "MAF: " << max_AF << "\n\n";
+
+	//print metrics to std::out
 	std::cout << "\n\nSum dist true / Sum dist cube = " << sum_dist_true / sum_dist_cube << std::endl;
 	std::cout << "Max AF = " << max_AF << std::endl;
 	std::cout << "Average AF = " << avg_AF / (N * num_of_Objects - not_found) << std::endl;

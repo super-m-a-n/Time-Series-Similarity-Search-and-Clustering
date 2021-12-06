@@ -12,5 +12,7 @@ extern int M;
 extern int probes;
 extern int K;	// the number of clusters-centroids
 
+extern double delta;	// the number used to define the grids for snapping the curves
+
 
 #endif
