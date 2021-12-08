@@ -3,7 +3,7 @@ CXXFLAGS =-Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -std=c++11
 CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder #-I./cluster_folder
 OBJS_FOLDER = ./objects 
 OBJ_COMMON =  ./common/object.o ./common/assist_functions.o ./common/h_hash.o ./common/dataset.o ./common/input_check.o
-OBJ_LSH = ./lsh_folder/g_hash.o ./lsh_folder/hash.o ./lsh_folder/lsh_struct.o
+OBJ_LSH = ./lsh_folder/g_hash.o ./lsh_folder/h_grid.o ./lsh_folder/hash.o ./lsh_folder/lsh_struct.o
 OBJ_HYPERCUBE = ./hypercube_folder/f_hash.o ./hypercube_folder/hypercube_class.o
 #OBJ_CLUSTER = ./cluster_folder/cluster_info.o 
 PROGRAMS = search

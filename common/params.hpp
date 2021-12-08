@@ -2,6 +2,8 @@
 #ifndef _PARAMS_HPP_
 #define _PARAMS_HPP_
 
+#include <string>
+
 // just the declaration of some useful global program parameters
 extern int k;	// For the LSH it is: the number of hash functions h that compose the amplified hash function g
 extern int d1;  // For the hypercube: It is the dimension of the hypercube
@@ -13,6 +15,8 @@ extern int probes;
 extern int K;	// the number of clusters-centroids
 
 extern double delta;	// the number used to define the grids for snapping the curves
+extern std::string algorithm;	// algorithm used
+extern std::string metric_func;      // metric used
 
 
 #endif

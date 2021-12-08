@@ -2,6 +2,7 @@
 #include "hash.hpp"
 #include "object.hpp"
 #include "g_hash.hpp"
+#include "h_grid.hpp"
 #include <iostream>
 #include <list>
 #include <utility>
@@ -32,13 +33,41 @@ int hash_table::get_capacity() const
 void hash_table::insert(const Object& p)
 {
 	uint32_t object_id = 0;
-	int index = g(p, this->capacity, object_id);				 // g hash function is used to get index in hash-table and locality object_id of given object
-	this->table[index].push_back(std::make_pair(&p, object_id)); // pointer to given point-Object and its locality ID are inserted at index
+
+	// different insert hash function depending on algorithm
+	if (algorithm == "LSH")
+	{
+		int index = g(p, this->capacity, object_id);				 // g hash function is used to get index in hash-table and locality object_id of given object
+		this->table[index].push_back(std::make_pair(&p, object_id)); // pointer to given point-Object and its locality ID are inserted at index
+	}
+	else if (algorithm == "Frechet")
+	{
+		// we first apply the grid function h_delta
+		const Object * gridCurve = h_delta(p);
+		int index = g(*gridCurve, this->capacity, object_id);		  // g hash function is used to get index in hash-table and locality object_id of given object
+		this->table[index].push_back(std::make_pair(&p, object_id));  // pointer to given point-Object and its locality ID are inserted at index
+		delete gridCurve;
+	}
 }
 
 int hash_table::get_bucket_index(const Object& p, uint32_t & object_id)
 {
-	return g(p, this->capacity, object_id);
+	int index = 0;
+
+	// different hash function depending on algorithm
+	if (algorithm == "LSH")
+	{
+		index = g(p, this->capacity, object_id);
+	}
+	else if (algorithm == "Frechet")
+	{
+		// we first apply the grid function h_delta to snap object to grid
+		const Object * gridCurve = h_delta(p);
+		index = g(*gridCurve, this->capacity, object_id);
+		delete gridCurve;
+	}
+
+	return index;
 }
 
 const std::list <std::pair <const Object*, uint32_t> > & hash_table::get_ith_bucket(int bucket_index) const

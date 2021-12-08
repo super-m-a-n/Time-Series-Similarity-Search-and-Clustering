@@ -7,6 +7,7 @@
 #include <cstdint>
 #include "g_hash.hpp"
 #include "object.hpp"
+#include "h_grid.hpp"
 
 
 class hash_table
@@ -16,6 +17,7 @@ private:
 	int size;						// number of elements added
 	int capacity;					// number of buckets
 	g_hash g;						// amplified g hash function for hash table
+	h_grid h_delta;					// grid hash function used for time series similarity search
 
 
 public:
