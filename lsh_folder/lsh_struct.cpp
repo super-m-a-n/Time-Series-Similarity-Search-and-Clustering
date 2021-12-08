@@ -71,7 +71,12 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 	for (int i = 0; i < num_of_Objects; i++)		// run for each of the query Objects
 	{
 		file << "Query: query Object " << (query_dataset.get_ith_object(i)).get_name() << "\n";
-		file << "Algorithm: LSH_Vector  \n\n";
+		if (algorithm == "LSH")
+			file << "Algorithm: LSH_Vector  \n\n";
+		else if (algorithm == "Frechet" && metric_func == "discrete")
+			file << "Algorithm: LSH_Frechet_Discrete  \n\n";
+		else if (algorithm == "Frechet" && metric_func == "continuous")
+			file << "Algorithm: LSH_Frechet_Continuous  \n\n";
 
 		//start timer for lsh
 		auto t_lsh_start = std::chrono::high_resolution_clock::now();

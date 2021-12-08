@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 #include "dataset.hpp"
 #include "object.hpp"
 #include "params.hpp"
@@ -43,7 +44,7 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 
 		    // local variables that will serve as arguments for Object constructor
 		    std::string object_name;
-		    float input_data[d];
+		    std::vector <float> input_data(d);
 		    
 		    while(str != NULL)
 		    {
@@ -58,7 +59,20 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		        str = strtok(NULL, "\t");
 		    }
 
-		    dataset[point_index] = new Object(input_data, object_name);		// create Object
+		    // different Object depending on algorithm
+		    if (algorithm == "LSH" || algorithm == "Hypercube")
+		    {
+		    	dataset[point_index] = new Object(input_data, object_name);		 // create Object
+		    }
+		    else if (algorithm == "Frechet" && metric_func == "discrete")
+		    {
+		    	dataset[point_index] = new time_series(input_data, object_name); // create time_series Object
+		    }
+		    else if (algorithm == "Frechet" && metric_func == "continuous")
+		    {
+		    	dataset[point_index] = new Object(input_data, object_name);		 // create Object (flattened time_series)
+		    }
+
 		}
 
 		free(line);

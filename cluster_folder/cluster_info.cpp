@@ -22,7 +22,7 @@
 Cluster_info::Cluster_info()
 {
 	// initialize a d-zero vector that will be used to initialize the K centroids
-	float input_vector[d];
+	std::vector <float> input_vector(d);
 	for (int i = 0; i < d; ++i)
 		input_vector[i] = 0;
 
@@ -540,7 +540,7 @@ bool Cluster_info::update(double (*metric)(const Object &, const Object &))
 	// for each cluster
 	for (int i = 0; i < K; ++i)
 	{
-		float mean_vector[d] = {0.0};
+		std::vector <float> mean_vector(d, 0,0);
 		int T = (this->clusters[i]).size();		// get number of objects in cluster
 
 		// for each object in cluster

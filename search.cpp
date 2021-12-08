@@ -14,26 +14,24 @@
 #include "assist_functions.hpp"
 
 // main for curve similarity search
-// uses 1)vector_lsh, 2)vector_hypercube, 3)curve_lsh(frechet)
+// uses 1)vector_lsh, 2)vector_hypercube, 3)curve_lsh(frechet) for time series
 
 // global program parameters
 int N = 1, R, d = 0, w, n = 0;		// global
 int k, L;							// vector lsh
 int d1, probes, M;					// vector hypercube
 double delta;				    	// curve lsh (frechet)
+std::string algorithm, metric_func;	// variable for algorithm , metric used for frechet
 
 int main(int argc, char const *argv[])
 {
 	// variables for program input files
 	std::string input_file, query_file, output_file;
 	
-	// variables for algorithm, metric for frechet
-	std::string algorithm, metric;
-
 	srand(time(NULL));
 
 	// check for input args and initialize them
-	if (!check_init_args(argc, argv, input_file, query_file, k, d1, L, M, probes, output_file, algorithm, metric, delta))
+	if (!check_init_args(argc, argv, input_file, query_file, k, d1, L, M, probes, output_file, algorithm, metric_func, delta))
 	{
 		std::cerr << "\nWrong command line input. Use : ./search -i <input_file> -q <query_file> -k <int> -L <int> -M <int> -probes <int> ";
 		std::cerr << "-o <output_file> -algorithm <LSH / Hypercube / Frechet> -metric <discrete / continuous> -delta <double>\n";
@@ -66,53 +64,68 @@ int main(int argc, char const *argv[])
 		}
 	}
 
+	if (metric_func.empty() && algorithm == "Frechet")
+	{
+		while (metric_func != "discrete" && metric_func != "continuous")
+		{
+			std::cout << "\nPlease give a metric for frechet curve similarity search (discrete / continuous) ->  ";
+			std::getline(std::cin, metric_func);
+			std::cout << std::endl;
+		}
+	}
+
 	std::cout << "\nReading Input Dataset   --> ";
 	// create a dataset object that will hold all the input objects-points
-	//Dataset dataset(n, input_file, algorithm);
 	Dataset dataset(n, input_file); 
 	std::cout << "Completed\n";
 
 	// pointer to abstract class search_method object
 	search_method * method;
+	
 	// pointer to metric function to be used
 	double (*metric_function)(const Object &, const Object &);
 	int numBuckets;
 
-	// depending on algorithm used method pointer will point to necessary structure
+	// depending on algorithm used, method pointer will point to necessary structure
 	if (algorithm == "LSH")
 	{
 		w = 5;									// experimental value (testing required)
 		numBuckets = floor(n/16);				// experimental value (testing required)
 		method = new lsh_struct(numBuckets);	// vector-curve lsh to be used, so create entire structure for lsh algorithm
-		metric_function = euclidean;
+		metric_function = euclidean;			// metric used is euclidean distance
 	}
 	else if (algorithm == "Hypercube")
 	{
-		w = 20;						// experimental value (testing required)
-		method = new hypercube;		// vector-curve hypercube to be used, so create entire structure for hypercube algorithm
-		metric_function = euclidean;
+		w = 20;							// experimental value (testing required)
+		method = new hypercube;			// vector-curve hypercube to be used, so create entire structure for hypercube algorithm
+		metric_function = euclidean;	// metric used is euclidean distance	
 	}
 	else if (algorithm == "Frechet")
 	{
-		w = 10;									// experimental value (testing required)
+		w = 5;									// experimental value (testing required)
 		numBuckets = floor(n/16);				// experimental value (testing required)
-		//method = new lsh_frechet(numBuckets);	// frechet-curve lsh to be used, so create entire structure for lsh frechet algorithm
+		method = new lsh_struct(numBuckets);	// frechet-curve lsh to be used, so create entire structure for lsh algorithm
 
-		if (metric.empty())
+		if (!delta)		// if no value was given for delta through command line
 		{
-			while (metric != "discrete" && metric != "continuous")
+			if (metric_func == "discrete")
 			{
-				std::cout << "\nPlease give a metric for frechet curve similarity search (discrete / continuous) ->  ";
-				std::getline(std::cin, metric);
-				std::cout << std::endl;
+				// delta << 4 * dim of grid * min {m1, m2} ,  dim of grid = 2, m1=m2=d for our case
+				delta = (8 * d) * 0.0003;					// experimental value (testing required)
+			}
+			else // metric continuous
+			{
+				// delta << 4 * dim of grid * min {m1, m2} ,  dim of grid = 1, m1=m2=d for our case
+				delta = (4 * d) * 0.0003;					// experimental value (testing required)	
 			}
 		}
 
-		//metric_function = (metric == "discrete") ? discrete_frechet : continuous_frechet; 
+		//metric_function = (metric_func == "discrete") ? discrete_frechet : continuous_frechet; 
+		metric_function = discrete_frechet;
 	}
 
 	std::cout << "Importing Input Dataset --> ";
-	// import dataset into lsh struct
+	// import dataset
 	method->import_data(dataset);
 	std::cout << "Completed\n";
 
@@ -137,7 +150,6 @@ int main(int argc, char const *argv[])
 
 		std::cout << "Creating Query Dataset  --> ";
 		// create a dataset object that will hold all the query objects-points
-		//Dataset query_dataset(nq, query_file, algorithm);
 		Dataset query_dataset(nq, query_file); 
 		std::cout << "Completed\n";
 
