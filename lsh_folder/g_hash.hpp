@@ -20,7 +20,7 @@ public:
 	g_hash();
 	~g_hash();
 	// overload of () operator, so that each g_hash object can be used as a "function"
-	int operator()(const Object& p, int table_size, uint32_t & object_id) const;	
+	int operator()(const Abstract_Object& abstract_object, int table_size, uint32_t & object_id) const;	
 };
 
 

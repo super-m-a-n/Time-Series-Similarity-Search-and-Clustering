@@ -48,7 +48,7 @@ void lsh_struct::import_data(const Dataset & dataset)
 
 }
 
-bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &))
+bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 
 	std::ofstream file (output_file, std::ios::out);		// open output file for output operations
@@ -82,7 +82,7 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 		auto t_lsh_start = std::chrono::high_resolution_clock::now();
 		
 		// run approximate nearest neighbors and return the neighbors and the distances found
-		std::vector <std::pair <double, const Object*> > appr_nearest = this->appr_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
+		std::vector <std::pair <double, const Abstract_Object*> > appr_nearest = this->appr_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
 		
 		// end timer for lsh
 		auto t_lsh_end = std::chrono::high_resolution_clock::now();
@@ -91,7 +91,7 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 		auto t_true_start = std::chrono::high_resolution_clock::now();
 
 		// run exact nearest neighbors and return the neighbors and the distances found
-		std::vector <std::pair <double, const Object*> > exact_nearest = this->exact_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
+		std::vector <std::pair <double, const Abstract_Object*> > exact_nearest = this->exact_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
 		
 		// end timer for brute force
 		auto t_true_end = std::chrono::high_resolution_clock::now();
@@ -103,8 +103,8 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 
 			if ((int) appr_nearest.size() >= index + 1)	// neighbors found may be less than N
 			{
-				const Object * object = std::get<1>(appr_nearest[index]);			// get object-neighbor found
-				double dist = std::get<0>(appr_nearest[index]);						// get distance from query object
+				const Abstract_Object * object = std::get<1>(appr_nearest[index]);		// get object-neighbor found
+				double dist = std::get<0>(appr_nearest[index]);							// get distance from query object
 				sum_dist_lsh += dist;
 				dist_lsh = dist;
 				found = true;
@@ -117,8 +117,8 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 
 			if ((int) exact_nearest.size() >= index + 1)	// neighbors found may be less than N
 			{
-				const Object * object = std::get<1>(exact_nearest[index]);			// get object-neighbor found
-				double dist = std::get<0>(exact_nearest[index]);					// get distance from query object
+				const Abstract_Object * object = std::get<1>(exact_nearest[index]);		// get object-neighbor found
+				double dist = std::get<0>(exact_nearest[index]);						// get distance from query object
 				sum_dist_true += dist;
 				dist_true = dist;
 
@@ -152,12 +152,12 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 			file << "R-near neighbors: (R = " << R << ")" << '\n';
 
 			// run approximate range search and write results into file
-			std::list <std::pair <double, const Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
-			std::list <std::pair <double, const Object*> > ::iterator it = R_list.begin();
+			std::list <std::pair <double, const Abstract_Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
+			std::list <std::pair <double, const Abstract_Object*> > ::iterator it = R_list.begin();
 
 			while (it != R_list.end()){
 				// object is within range, so ass it to the list
-					file << "Point-Object " << (std::get<1>(*it))->get_name() << '\n';
+					file << "Object " << (std::get<1>(*it))->get_name() << '\n';
 					++it;
 			}
 			R_list.clear();
@@ -180,7 +180,7 @@ bool lsh_struct::execute(const Dataset & dataset, const Dataset & query_dataset,
 	return true;
 }
 
-std::vector <std::pair <double, const Object*> > lsh_struct::appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &))
+std::vector <std::pair <double, const Abstract_Object*> > lsh_struct::appr_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	// run approximate kNN
 
@@ -188,7 +188,7 @@ std::vector <std::pair <double, const Object*> > lsh_struct::appr_nearest_neighb
 	std::set <std::string> visited_set;
 
 	// initialize a max heap priority queue, that will store the distance of Object from query object and a pointer to the Object itself
-	std::priority_queue <std::pair <double, const Object*> > max_heap;
+	std::priority_queue <std::pair <double, const Abstract_Object*> > max_heap;
 
 	for (int i = 0; i < L; ++i)
 	{
@@ -200,8 +200,8 @@ std::vector <std::pair <double, const Object*> > lsh_struct::appr_nearest_neighb
 		// iterate the bucket of hash table that the bucket index indicates
 		for (auto const& object_info : (this->lsh_hash_struct[i])->get_ith_bucket(bucket))
 		{
-			const Object * object = std::get<0>(object_info);			// get object
-			uint32_t object_id = std::get<1>(object_info);		// get object's locality ID
+			const Abstract_Object * object = std::get<0>(object_info);			// get object
+			uint32_t object_id = std::get<1>(object_info);						// get object's locality ID
 
 			// if given object has not been visited yet and has same locality ID with query object
 			if (visited_set.count(object->get_name()) == 0 && object_id == query_object_id)
@@ -229,7 +229,7 @@ std::vector <std::pair <double, const Object*> > lsh_struct::appr_nearest_neighb
 	}
 
 	// initialize a vector with how many approximate nearest neighbors were found
-	std::vector <std::pair <double, const Object*> > nearest(max_heap.size());
+	std::vector <std::pair <double, const Abstract_Object*> > nearest(max_heap.size());
 
 	for (int i = nearest.size() - 1; i >= 0; --i)	// for each nearest neighbor found
 	{
@@ -240,13 +240,13 @@ std::vector <std::pair <double, const Object*> > lsh_struct::appr_nearest_neighb
 	return nearest;
 }
 
-std::vector <std::pair <double, const Object*> > lsh_struct::exact_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &))
+std::vector <std::pair <double, const Abstract_Object*> > lsh_struct::exact_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	// run brute force exact kNN
 	int num_of_Objects = dataset.get_num_of_Objects();
 
 	// initialize a max heap priority queue, that will store the distance of Object from query object and a pointer to the Object itself
-	std::priority_queue <std::pair <double, const Object*> > max_heap;
+	std::priority_queue <std::pair <double, const Abstract_Object*> > max_heap;
 
 	// check each of the dataset objects by brute force
 	for (int i = 0; i < num_of_Objects; ++i)
@@ -270,7 +270,7 @@ std::vector <std::pair <double, const Object*> > lsh_struct::exact_nearest_neigh
 	}
 
 	// initialize a vector with how many exact nearest neighbors were found
-	std::vector <std::pair <double, const Object*> > nearest(max_heap.size());
+	std::vector <std::pair <double, const Abstract_Object*> > nearest(max_heap.size());
 
 	for (int i = nearest.size() - 1; i >= 0; --i)	// for each nearest neighbor found
 	{
@@ -282,13 +282,13 @@ std::vector <std::pair <double, const Object*> > lsh_struct::exact_nearest_neigh
 }
 
 
-std::list <std::pair <double, const Object*> > lsh_struct::range_search(const Object & query_object, const int & R, double (*metric)(const Object &, const Object &), const int R2)
+std::list <std::pair <double, const Abstract_Object*> > lsh_struct::range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &), const int R2)
 {
 
 	std::set<std::string> visited_set;
 
 	//Save all object-points who are within radius R of the query_object
-	std::list<std::pair <double, const Object*> > R_list;
+	std::list<std::pair <double, const Abstract_Object*> > R_list;
 
 	for (int i = 0; i < L; ++i)
 	{
@@ -300,7 +300,7 @@ std::list <std::pair <double, const Object*> > lsh_struct::range_search(const Ob
 		// iterate the bucket of hash table that the bucket index indicates
 		for (auto const& object_info : (this->lsh_hash_struct[i])->get_ith_bucket(bucket))
 		{
-			const Object * object = std::get<0>(object_info);			// get object
+			const Abstract_Object * object = std::get<0>(object_info);			// get object
 
 			// if current object has not been visited yet
 			if (visited_set.count(object->get_name()) == 0)

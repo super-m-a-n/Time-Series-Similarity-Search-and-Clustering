@@ -7,12 +7,14 @@
 #include <fstream>
 
 hypercube::hypercube(){
-    this->cube_array = new std::list<const Object*>[1 << d1]; //size 2^k (di is the global variable which stores the dimension of the hypercube)
+    this->cube_array = new std::list<const Abstract_Object*>[1 << d1]; //size 2^k (di is the global variable which stores the dimension of the hypercube)
     this->f_array = new f_hash[d1];
     this->h_array = new h_hash[d1];
 }
 
-uint8_t hypercube::get_0_or_1(int index, const Object& object){
+uint8_t hypercube::get_0_or_1(int index, const Abstract_Object& abstract_object){
+	// downcast abstract object to type Object (hypercube works with only Objects anyway)
+	const Object& object = dynamic_cast<const Object&>(abstract_object);
     return (this->f_array[index])(this->h_array[index](object));
 }
 
@@ -23,7 +25,7 @@ void hypercube::import_data(const Dataset& dataset){
     int num_of_objects = dataset.get_num_of_Objects();
     for (int i = 0 ; i < num_of_objects ; i++ ){
         int index = 0; //the index holds the encoding of the coordinates of the vertex 
-        const Object& obj = dataset.get_ith_object(i); //Get the i-th object of the dataset
+        const Abstract_Object& obj = dataset.get_ith_object(i); //Get the i-th object of the dataset
         for (int j = 0 ; j < d1 ; j++){
             index = (index << 1) + this->get_0_or_1(j, obj);
         }
@@ -32,7 +34,7 @@ void hypercube::import_data(const Dataset& dataset){
 }
 //void print() const;
 
-bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &)){
+bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
 
 	std::ofstream file (output_file, std::ios::out);		// open output file for output operations
 	
@@ -60,7 +62,7 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 		auto t_cube_start = std::chrono::high_resolution_clock::now();
 		
 		// run approximate nearest neighbors and return the neighbors and the distances found
-		std::vector <std::pair <double, const Object*> > appr_nearest = this->appr_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
+		std::vector <std::pair <double, const Abstract_Object*> > appr_nearest = this->appr_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
 		// end timer for lsh
 		auto t_cube_end = std::chrono::high_resolution_clock::now();
 
@@ -68,7 +70,7 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 		auto t_true_start = std::chrono::high_resolution_clock::now();
 
 		// run exact nearest neighbors and return the neighbors and the distances found
-		std::vector <std::pair <double, const Object*> > exact_nearest = this->exact_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
+		std::vector <std::pair <double, const Abstract_Object*> > exact_nearest = this->exact_nearest_neighbors(dataset, query_dataset.get_ith_object(i), N, metric);
 		
 		// end timer for brute force
 		auto t_true_end = std::chrono::high_resolution_clock::now();
@@ -80,8 +82,8 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 
 			if ((int) appr_nearest.size() >= index + 1)	// neighbors found may be less than N
 			{
-				const Object * object = std::get<1>(appr_nearest[index]);			// get object-neighbor found
-				double dist = std::get<0>(appr_nearest[index]);						// get distance from query object
+				const Abstract_Object * object = std::get<1>(appr_nearest[index]);			// get object-neighbor found
+				double dist = std::get<0>(appr_nearest[index]);								// get distance from query object
 				sum_dist_cube += dist;
 				dist_cube = dist;
 				found = true;
@@ -97,8 +99,8 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 
 			if ((int) exact_nearest.size() >= index + 1)	// neighbors found may be less than N
 			{
-				const Object * object = std::get<1>(exact_nearest[index]);			// get object-neighbor found
-				double dist = std::get<0>(exact_nearest[index]);					// get distance from query object
+				const Abstract_Object * object = std::get<1>(exact_nearest[index]);			// get object-neighbor found
+				double dist = std::get<0>(exact_nearest[index]);							// get distance from query object
 				sum_dist_true += dist;
 				dist_true = dist;
 
@@ -134,11 +136,11 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 			file << "R-near neighbors: (R = " << R << ")" << '\n';
 
 			// run approximate range search and write results into file
-			std::list <std::pair <double, const Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
+			std::list <std::pair <double, const Abstract_Object*> > R_list = this->range_search(query_dataset.get_ith_object(i), R, metric);
 			
 			for (auto item: R_list){
 				// object is within range, so ass it to the list
-					file << "Point-Object " << (std::get<1>(item))->get_name() << '\n';
+					file << "Object " << (std::get<1>(item))->get_name() << '\n';
 					;
 			}
 			R_list.clear();
@@ -166,7 +168,7 @@ bool hypercube::execute(const Dataset & dataset, const Dataset & query_dataset, 
 
 void hypercube::vertex_visiting_first_stage(search_type Type, const int R, int curr_vertex, int ham_dist, int M_rem, int probes_rem, uint curr_bit,
 	void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int N, const int R2){
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int N, const int R2){
 
 	this->vertex_visiting_second_stage(Type, R, curr_vertex, M_rem, probes_rem, curr_bit, ham_dist, max_heap, query_object, metric, N, R2);
 
@@ -180,7 +182,7 @@ void hypercube::vertex_visiting_first_stage(search_type Type, const int R, int c
 }
 void hypercube::vertex_visiting_second_stage(search_type Type, const int R, int curr_vertex, int& M_rem, int& probes_rem, uint curr_bit, int ham_rem,
 	void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int& N, const int R2 ){
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int& N, const int R2 ){
 
 
 	if (ham_rem == 0){
@@ -199,9 +201,9 @@ void hypercube::vertex_visiting_second_stage(search_type Type, const int R, int 
 }
 
 void hypercube::vertex_visiting_third_stage(search_type Type, const int R, int curr_vertex, int& M_rem, void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int& N, const int R2){
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int& N, const int R2){
 
-	std::list<const Object*>& vertex_list = this->cube_array[curr_vertex];
+	std::list<const Abstract_Object*>& vertex_list = this->cube_array[curr_vertex];
 	for(auto obj_p : vertex_list){
 		double dist = (*metric)(query_object, *obj_p);
 
@@ -209,12 +211,12 @@ void hypercube::vertex_visiting_third_stage(search_type Type, const int R, int c
 		// Otherwise, the search type is range search thus we want the distance to be smaller than R
 		if (Type == kNN){
 			
-			push_at_most_N(obj_p, N, dist, (std::priority_queue <std::pair <double, const Object*> >* ) max_heap);
+			push_at_most_N(obj_p, N, dist, (std::priority_queue <std::pair <double, const Abstract_Object*> >* ) max_heap);
 		}
 		// If the point belongs to the ring [R2, R) then add it to the list
 		else if (R2 <= dist && dist < R){
 
-				std::list <std::pair <double, const Object*> >* casted_p = (std::list <std::pair <double, const Object*> >* ) max_heap;
+				std::list <std::pair <double, const Abstract_Object*> >* casted_p = (std::list <std::pair <double, const Abstract_Object*> >* ) max_heap;
 				casted_p->push_back(std::make_pair(dist, obj_p));
 		}
 		M_rem -= 1;
@@ -222,7 +224,7 @@ void hypercube::vertex_visiting_third_stage(search_type Type, const int R, int c
 	}
 }
 
-void push_at_most_N(const Object* obj_p, int N, double dist, std::priority_queue <std::pair <double, const Object*> >* max_heap){
+void push_at_most_N(const Abstract_Object* obj_p, int N, double dist, std::priority_queue <std::pair <double, const Abstract_Object*> >* max_heap){
 	if ((int) max_heap->size() < N)	// if we haven't found N neighbors yet
 		max_heap->push(std::make_pair(dist, obj_p));	// simply push the new object-neighbor found
 	else{
@@ -235,13 +237,13 @@ void push_at_most_N(const Object* obj_p, int N, double dist, std::priority_queue
 	}
 }
 
-std::vector <std::pair <double, const Object*> > hypercube::appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &))
+std::vector <std::pair <double, const Abstract_Object*> > hypercube::appr_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 
 	// run approximate kNN
 
 	// initialize a min heap priority queue, that will store the Object identifier string name and the distance of Object from query object
-	std::priority_queue <std::pair <double, const Object*> > max_heap;
+	std::priority_queue <std::pair <double, const Abstract_Object*> > max_heap;
 
 	int query_vertex = 0;
 
@@ -252,7 +254,7 @@ std::vector <std::pair <double, const Object*> > hypercube::appr_nearest_neighbo
 	this->vertex_visiting_first_stage(kNN, 0, query_vertex, 0, M, probes, 1 << (d1-1), (void*) & max_heap, query_object, metric, N);
 
 	// initialize a vector with how many exact nearest neighbors were found
-	std::vector <std::pair <double, const Object*> > nearest(max_heap.size());
+	std::vector <std::pair <double, const Abstract_Object*> > nearest(max_heap.size());
 
 	for (int i = nearest.size() - 1; i >= 0; --i)	// for each nearest neighbor found
 	{
@@ -264,7 +266,7 @@ std::vector <std::pair <double, const Object*> > hypercube::appr_nearest_neighbo
 }
 
 
-std::list <std::pair <double, const Object*> > hypercube::range_search(const Object & query_object, const int & R, double (*metric)(const Object &, const Object &),  const int R2)
+std::list <std::pair <double, const Abstract_Object*> > hypercube::range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &),  const int R2)
 {
 
 	int query_index = 0;
@@ -273,19 +275,19 @@ std::list <std::pair <double, const Object*> > hypercube::range_search(const Obj
             query_index = (query_index << 1) + this->get_0_or_1(j, query_object);
     }
 
-	std::list <std::pair <double, const Object*> > R_list;
+	std::list <std::pair <double, const Abstract_Object*> > R_list;
 
 	this->vertex_visiting_first_stage(RANGE_SEARCH, R, query_index, 0, M, probes, 1 << (d1-1), (void*) & R_list, query_object, metric,0, R2);
 
 	return R_list;
 }
 
-std::vector <std::pair <double, const Object*> > hypercube::exact_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &)){
+std::vector <std::pair <double, const Abstract_Object*> > hypercube::exact_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
 	// run brute force exact kNN
 	int num_of_Objects = dataset.get_num_of_Objects();
 
 	// initialize a max heap priority queue, that will store the distance of Object from query object and a pointer to the Object itself
-	std::priority_queue <std::pair <double, const Object*> > max_heap;
+	std::priority_queue <std::pair <double, const Abstract_Object*> > max_heap;
 
 	// check each of the dataset objects by brute force
 	for (int i = 0; i < num_of_Objects; ++i)
@@ -309,7 +311,7 @@ std::vector <std::pair <double, const Object*> > hypercube::exact_nearest_neighb
 	}
 
 	// initialize a vector with how many exact nearest neighbors were found
-	std::vector <std::pair <double, const Object*> > nearest(max_heap.size());
+	std::vector <std::pair <double, const Abstract_Object*> > nearest(max_heap.size());
 	for (int i = nearest.size() - 1; i >= 0; --i)	// for each nearest neighbor found
 	{
 		nearest[i] = max_heap.top();	// save nearest neighbor

@@ -28,19 +28,19 @@ public:
 
 	// executes the approximate/exact/ranged nearest neighbors algorithms using given metric function (pointer to function)
 	// and outputs results and execution times in output file
-	bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &));
+	bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 
 	// runs approximate nearest neighbors using given metric function and returns an array of nearest neighbors and distances found
-	std::vector <std::pair <double, const Object*> > appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &));
+	std::vector <std::pair <double, const Abstract_Object*> > appr_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 
 	// runs exact nearest neighbors using given metric function and returns an array of nearest neighbors and distances found
-	std::vector <std::pair <double, const Object*> > exact_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &));
+	std::vector <std::pair <double, const Abstract_Object*> > exact_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 
 	// runs approximate range search using given metric function 
 	//There is another parameter R2. Given R and R2, this function actually only stores in the set points which belong to the ring [R2, R) with center the query_object
 	// Here by ring [r, R) with center C is the set of points with r <= dist < R where dist is the distance of the point from the center
 	// By default R2 is 0 so the ring [0, R) is acually the ball with radius R 
-	std::list <std::pair <double, const Object*> > range_search(const Object & query_object, const int & R, double (*metric)(const Object &, const Object &), const int R2 = 0);
+	std::list <std::pair <double, const Abstract_Object*> > range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &), const int R2 = 0);
 	
 };
 

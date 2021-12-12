@@ -25,16 +25,16 @@ public:
 	virtual void import_data(const Dataset & dataset) = 0;
 
 	// executes the approximate/exact/ranged nearest neighbors algorithms using given metric function (pointer to function)
-	virtual bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &)) = 0;
+	virtual bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &)) = 0;
 
 	// runs approximate nearest neighbors using given metric function and returns an array of nearest neighbors and distances found
-	virtual std::vector <std::pair <double, const Object*> > appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &)) = 0;
+	virtual std::vector <std::pair <double, const Abstract_Object*> > appr_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &)) = 0;
 
 	// runs exact nearest neighbors using given metric function and returns an array of nearest neighbors and distances found
-	virtual std::vector <std::pair <double, const Object*> > exact_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &)) = 0;
+	virtual std::vector <std::pair <double, const Abstract_Object*> > exact_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &)) = 0;
 
 	// runs approximate range search using given metric function 
-	virtual std::list <std::pair <double, const Object*> > range_search(const Object & query_object, const int & R, double (*metric)(const Object &, const Object &), const int R2 = 0) = 0;
+	virtual std::list <std::pair <double, const Abstract_Object*> > range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &), const int R2 = 0) = 0;
 	
 };
 

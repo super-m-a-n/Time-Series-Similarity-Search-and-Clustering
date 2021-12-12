@@ -19,13 +19,13 @@ enum search_type {kNN, RANGE_SEARCH};
 
 class hypercube : public search_method {
 private:
-    std::list<const Object*>* cube_array; //every vertex of the hypercube will store Object pointers in a similar fashion to the lsh hashtables
+    std::list<const Abstract_Object*>* cube_array; //every vertex of the hypercube will store Abstract_Object pointers in a similar fashion to the lsh hashtables
                                     //The array will have size 2^d1 where d1 is the dimension of the cube
     f_hash* f_array;                //create d1 functions which assign integers randomly to {0,1} 
     h_hash* h_array;                //create d1 h_hash functions
 
     //Find the value (0 or 1) of the i-th coordinate of the vertex of the d1-hypercube for the given object
-    uint8_t get_0_or_1(int i, const Object& object);
+    uint8_t get_0_or_1(int i, const Abstract_Object& abstract_object);
     
 
     //Functions used for the recursion in which the vertices are visited in increasing hamming distance
@@ -35,13 +35,13 @@ private:
     // thus we use void* so that the appropriate cast is used
     // (Initially a template was used for references to the priority queue or set instead of void* but there waw an error of unknown origin and the template was discarded)
     void vertex_visiting_first_stage(search_type Type, const int R, int curr_vertex, int ham_dist, int M_rem, int probes_rem, uint curr_bit, void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int N, const int R2 = 0);
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int N, const int R2 = 0);
     
     void vertex_visiting_second_stage(search_type Type, const int R, int curr_vertex, int& M_rem, int& probes_rem, uint curr_bit, int ham_rem, void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int& N, const int R2 = 0);
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int& N, const int R2 = 0);
     
     void vertex_visiting_third_stage(search_type Type, const int R, int curr_vertex, int& M_rem, void* max_heap,
-								const Object & query_object, double (*metric)(const Object &, const Object &), int& N, const int R2 = 0);
+								const Abstract_Object & query_object, double (*metric)(const Abstract_Object &, const Abstract_Object &), int& N, const int R2 = 0);
 
 public:
 
@@ -54,21 +54,21 @@ public:
 
     // executes the approximate/exact/ranged nearest neighbors algorithms using given metric function (pointer to function)
 	// and outputs results and execution times in output file
-	bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Object &, const Object &));
+	bool execute(const Dataset & dataset, const Dataset & query_dataset, const std::string & output_file, const int & N, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 	// runs approximate and exact nearest neighbors using given metric function and write results into file
-	std::vector <std::pair <double, const Object*> > appr_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &));
+	std::vector <std::pair <double, const Abstract_Object*> > appr_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 	// run approximate range search using given metric function and save results in a set (with their distances from the query object)
     // Ignore objects whose ids are in the visited set
     // By default, the visited set will be empty which means all the objects found will be returned
-	std::list <std::pair <double, const Object*> > range_search(const Object & query_object, const int & R, double (*metric)(const Object &, const Object &), const int R2 = 0);
+	std::list <std::pair <double, const Abstract_Object*> > range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &), const int R2 = 0);
 
-    std::vector <std::pair <double, const Object*> > exact_nearest_neighbors(const Dataset & dataset, const Object & query_object, const int & N, double (*metric)(const Object &, const Object &));
+    std::vector <std::pair <double, const Abstract_Object*> > exact_nearest_neighbors(const Dataset & dataset, const Abstract_Object & query_object, const int & N, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 
     //void print() const;
     ~hypercube();
 };
 
 //Make sure the priority queue only stores at most N from the currently found objects since more than N are not needed
-void push_at_most_N(const Object* obj_p, int N, double dist, std::priority_queue <std::pair <double, const Object*> >* max_heap);
+void push_at_most_N(const Abstract_Object* obj_p, int N, double dist, std::priority_queue <std::pair <double, const Abstract_Object*> >* max_heap);
 
 #endif
