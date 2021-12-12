@@ -18,7 +18,7 @@ public:
 	// default constructor, randomly chooses t
 	h_grid();
 	// overload of () operator, so that each h_grid object can be used as a "function"
-	Object * operator()(const Object& time_series) const;
+	Abstract_Object * operator()(const Abstract_Object& time_series) const;
 };
 
 #endif

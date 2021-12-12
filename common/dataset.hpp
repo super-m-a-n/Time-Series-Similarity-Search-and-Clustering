@@ -5,11 +5,11 @@
 #include <string>
 #include "object.hpp"
 
-// class Dataset is simply a collection of point-Objects
+// class Dataset is simply a collection of Abstract-Objects
 class Dataset
 {
 private:
-	Object ** dataset; 		// an array of pointers to Objects
+	Abstract_Object ** dataset; 		// an array of pointers to Abstract-Objects
 	int num_of_Objects;
 
 public:
@@ -21,7 +21,7 @@ public:
 	// returns number of objects of dataset
 	int get_num_of_Objects() const;
 	// returns i-th object of dataset;
-	const Object& get_ith_object(int i) const;
+	const Abstract_Object& get_ith_object(int i) const;
 	
 };
 

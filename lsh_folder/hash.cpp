@@ -12,7 +12,7 @@ hash_table::hash_table(int numBuckets) : size(0), capacity(numBuckets)
 {
 	// calls default constructor for g hash function of hash table
 	// allocates memory for the table of lists
-	table = new std::list <std::pair <const Object*, uint32_t> >[numBuckets];
+	table = new std::list <std::pair <const Abstract_Object*, uint32_t> >[numBuckets];
 }
 
 hash_table::~hash_table()
@@ -30,7 +30,7 @@ int hash_table::get_capacity() const
 	return this->capacity;
 }
 	
-void hash_table::insert(const Object& p)
+void hash_table::insert(const Abstract_Object& p)
 {
 	uint32_t object_id = 0;
 
@@ -38,19 +38,19 @@ void hash_table::insert(const Object& p)
 	if (algorithm == "LSH")
 	{
 		int index = g(p, this->capacity, object_id);				 // g hash function is used to get index in hash-table and locality object_id of given object
-		this->table[index].push_back(std::make_pair(&p, object_id)); // pointer to given point-Object and its locality ID are inserted at index
+		this->table[index].push_back(std::make_pair(&p, object_id)); // pointer to given Abstract-Object and its locality ID are inserted at index
 	}
 	else if (algorithm == "Frechet")
 	{
 		// we first apply the grid function h_delta
-		const Object * gridCurve = h_delta(p);
+		const Abstract_Object * gridCurve = h_delta(p);
 		int index = g(*gridCurve, this->capacity, object_id);		  // g hash function is used to get index in hash-table and locality object_id of given object
-		this->table[index].push_back(std::make_pair(&p, object_id));  // pointer to given point-Object and its locality ID are inserted at index
+		this->table[index].push_back(std::make_pair(&p, object_id));  // pointer to given Abstract-Object and its locality ID are inserted at index
 		delete gridCurve;
 	}
 }
 
-int hash_table::get_bucket_index(const Object& p, uint32_t & object_id)
+int hash_table::get_bucket_index(const Abstract_Object& p, uint32_t & object_id)
 {
 	int index = 0;
 
@@ -62,7 +62,7 @@ int hash_table::get_bucket_index(const Object& p, uint32_t & object_id)
 	else if (algorithm == "Frechet")
 	{
 		// we first apply the grid function h_delta to snap object to grid
-		const Object * gridCurve = h_delta(p);
+		const Abstract_Object * gridCurve = h_delta(p);
 		index = g(*gridCurve, this->capacity, object_id);
 		delete gridCurve;
 	}
@@ -70,7 +70,7 @@ int hash_table::get_bucket_index(const Object& p, uint32_t & object_id)
 	return index;
 }
 
-const std::list <std::pair <const Object*, uint32_t> > & hash_table::get_ith_bucket(int bucket_index) const
+const std::list <std::pair <const Abstract_Object*, uint32_t> > & hash_table::get_ith_bucket(int bucket_index) const
 {
 	return this->table[bucket_index];
 }

@@ -83,7 +83,7 @@ int main(int argc, char const *argv[])
 	search_method * method;
 	
 	// pointer to metric function to be used
-	double (*metric_function)(const Object &, const Object &);
+	double (*metric_function)(const Abstract_Object &, const Abstract_Object &);
 	int numBuckets;
 
 	// depending on algorithm used, method pointer will point to necessary structure

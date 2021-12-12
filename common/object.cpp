@@ -7,6 +7,8 @@
 #include <random>
 #include <cmath>
 #include <vector>
+#include <utility>
+#include <typeinfo>
 
 
 
@@ -33,46 +35,41 @@ Object::Object()
 		std::mt19937 generator(rd());
 		std::normal_distribution<float> distr(0, 1);		// each coordinate follows normal(0,1) distribution
 
-		vector.push_back(distr(generator));
+		data_vector.push_back(distr(generator));
 
-		norm_squared += vector[i] * vector[i];
+		norm_squared += data_vector[i] * data_vector[i];
 	}
 
 	for (int i = 0; i < dim; ++i)
-		vector[i] = vector[i] / sqrt(norm_squared);			// divide each coordinate by norm, to normalize point-object
+		data_vector[i] = data_vector[i] / sqrt(norm_squared);			// divide each coordinate by norm, to normalize point-object
 }
 
-Object::Object(std::vector <float> & input_vector, std::string & object_name) : identifier(object_name)
+Object::Object(std::vector <float> & input_vector, std::string & object_name) : Abstract_Object(object_name)
 {
 	for (int i = 0; i < (int) input_vector.size(); ++i)
-		vector.push_back(input_vector[i]);
+		data_vector.push_back(input_vector[i]);
 }
 
 Object::Object(std::vector <float> & input_vector)
 {
 	for (int i = 0; i < (int) input_vector.size(); ++i)
-		vector.push_back(input_vector[i]);
+		data_vector.push_back(input_vector[i]);
 }
 
-Object::Object(std::string & object_name) : identifier(object_name){}
 
 Object::~Object() {}
 
 ///////////////////////// GETTERS /////////////////////////////////////////////
 
-const std::string & Object::get_name() const
-{
-	return this->identifier;
-}
 
 float Object::get_ith(int i) const
 {
-	return this->vector[i];
+	return this->data_vector[i];
 }
 
 int Object::get_dim() const
 {
-	return (int) (this->vector).size();
+	return (int) (this->data_vector).size();
 }
 
 ///////////////////////// SETTERS /////////////////////////////////////////////
@@ -80,7 +77,7 @@ int Object::get_dim() const
 void Object::set(const Object& p)
 {
 	// copy identifier
-	this->identifier = p.identifier;
+	this->identifier = p.get_name();
 
 	if (this->get_dim() != p.get_dim())		// object dimensions should match
 	{
@@ -90,13 +87,13 @@ void Object::set(const Object& p)
 
 	// copy coordinates
 	for (int i = 0; i < this->get_dim(); ++i)
-		this->vector[i] = p.vector[i];
+		this->data_vector[i] = p.data_vector[i];
 }
 
 
 void Object::set_ith(int i, float value)
 {
-	this->vector[i] = value;
+	this->data_vector[i] = value;
 }
 
 ////////////////////////  PRINTS ///////////////////////////////////////////////
@@ -112,8 +109,8 @@ void Object::print() const
 void Object::print_coordinates() const{
 	std::cout << "(";
 	for (int i = 0; i < (this->get_dim() - 1); ++i)
-		std::cout << this->vector[i] << ",";
-	std::cout << this->vector[this->get_dim() - 1];
+		std::cout << this->data_vector[i] << ",";
+	std::cout << this->data_vector[this->get_dim() - 1];
 	std::cout << ")";
 }
 
@@ -127,8 +124,8 @@ void Object::print(std::ofstream & file) const
 void Object::print_coordinates(std::ofstream & file) const{
 	file << "(";
 	for (int i = 0; i < (this->get_dim() - 1); ++i)
-		file << this->vector[i] << ",";
-	file << this->vector[this->get_dim() - 1];
+		file << this->data_vector[i] << ",";
+	file << this->data_vector[this->get_dim() - 1];
 	file << ")";
 }
 
@@ -145,13 +142,21 @@ float Object::inner_prod(const Object& p) const
 	}
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		inner_prod += this->vector[i] * p.vector[i];
+		inner_prod += this->data_vector[i] * p.data_vector[i];
 
 	return inner_prod;
 }
 
-double Object::euclidean_distance(const Object& p) const
+double Object::euclidean_distance(const Abstract_Object & abstract_object) const
 {
+	// downcast abstract object to type Object
+	//try {
+	const Object& p = dynamic_cast<const Object&>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "Object::euclidean_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
 	double dist_squared = 0.0;
 
 	if (this->get_dim() != p.get_dim())		// object dimensions should match for euclidean distance
@@ -161,10 +166,28 @@ double Object::euclidean_distance(const Object& p) const
 	}
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		dist_squared += (double) (this->vector[i] - p.vector[i]) * (double) (this->vector[i] - p.vector[i]);
+		dist_squared += (double) (this->data_vector[i] - p.data_vector[i]) * (double) (this->data_vector[i] - p.data_vector[i]);
 
 	return sqrt(dist_squared);
 }
+
+double Object::discrete_frechet_distance(const Abstract_Object & abstract_object) const
+{
+	// for plain object frechet_distance is not supported
+	std::cerr << "Warning : Object::discrete_frechet_distance : Caller object is of type Object (undefined behavior)\n\n";
+	// return garbage value
+	return 0.0;
+}
+
+const Object * Object::to_Object() const
+{
+	std::vector <float> copy_vector(this->get_dim());
+
+	for (int i = 0; i < this->get_dim(); ++i)
+		copy_vector[i] = data_vector[i];
+
+	return new Object(copy_vector);
+}	
 
 
 std::vector <int> Object::snap() const
@@ -172,7 +195,7 @@ std::vector <int> Object::snap() const
 	std::vector <int> snapped_object;
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		snapped_object.push_back(floor(this->vector[i] / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
+		snapped_object.push_back(floor(this->data_vector[i] / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
 
 	return snapped_object;
 }
@@ -181,47 +204,28 @@ std::vector <float> Object::remove_dupls(std::vector <int> & snapped_curve) cons
 {
 	std::vector <float> grid_curve;
 	
-	// for each point of curve, one boolean variable stating if it is duplicate or not
-	std::vector <bool> duplicate (this->get_complexity(), false);
+	// for each coordinate of Object, one boolean variable stating if it is duplicate or not
+	std::vector <bool> duplicate (this->get_dim(), false);
 
-	// now we mark duplicate points from snapping
-	int pos = 0;	// index of last non duplicate point
-	for (int i = 1; i < this->get_complexity(); ++i)	// for each point of curve
+	// now we mark duplicate coordinates from snapping
+	
+	int pos = 0;	// index of last non duplicate coordinate
+
+	for (int i = 1; i < this->get_dim(); ++i)	// for each coordinate of object
 	{
-		// check if point i is the same as last non duplicate point
-		
-		// if metric is discete time series is 2 dimensional
-		if (metric_func == "discrete")
-		{
-			// check if i-th point is equal to last unique point
-			if (snapped_curve[2*i] == snapped_curve[2*pos] && snapped_curve[2*i+1] == snapped_curve[2*pos+1])
-				duplicate[i] = true;	// if it same as last non duplicate point, then its a duplicate
-			else
-				pos = i;		// otherwise it becomes the new last non duplicate point
-		}
-		// if metric is continuous,  time series is 1 dimensional
-		else if (metric_func == "continuous")
-		{
-			// check if i-th point is equal to last non duplicate point
-			if (snapped_curve[i] == snapped_curve[pos])
-				duplicate[i] = true;
-			else
-				pos = i;
-		}
+		// check if coordinate i is the same as last non duplicate coordinate
+		if (snapped_curve[i] == snapped_curve[pos])
+			duplicate[i] = true;
+		else
+			pos = i;
 	}
 
-	// push back the non duplicate points to grid curve vector
-	for (int i = 0; i < this->get_complexity(); ++i)
+	// push back the non duplicate coordinates to grid curve vector
+	for (int i = 0; i < this->get_dim(); ++i)
 	{
 		if (duplicate[i] == false)
 		{
-			if (metric_func == "continuous")
-				grid_curve.push_back(snapped_curve[i]);
-			else if (metric_func == "discrete")
-			{
-				grid_curve.push_back(snapped_curve[2*i]);
-				grid_curve.push_back(snapped_curve[2*i+1]);
-			}
+			grid_curve.push_back(snapped_curve[i]);
 		}
 	}
 
@@ -230,75 +234,237 @@ std::vector <float> Object::remove_dupls(std::vector <int> & snapped_curve) cons
 
 void Object::pad(std::vector <float> & grid_curve) const
 {
-	// finally check if complexity/dimension of snapped grid time_series diminished, and apply padding if necessary
+	// finally check if dimension of snapped grid object diminished, and apply padding if necessary
 	// with special big padding number
 	unsigned long int M = 1000000;  /// further testing required
 	for (int i = (int) grid_curve.size(); i < this->get_dim(); ++i)
 		grid_curve.push_back(M);
 }
 
-double euclidean(const Object & p, const Object & q)
+Abstract_Object * Object::to_grid_curve(float t1, float t2) const
 {
-	return p.euclidean_distance(q);
+	// first of all the function snaps the caller Object-time series to grid, without multiplying by delta or shifting by t
+	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
+	
+	// vector holds snapped points-coordinates
+	std::vector <int> snapped_object = this->snap();
+
+	// vector of grid curve coordinates after removing duplicates from snapping
+	std::vector <float> grid_curve = this->remove_dupls(snapped_object);
+
+	// multiply by delta and shift by t to get final grid curve
+	for (int i = 0; i < (int) grid_curve.size(); ++i)
+		grid_curve[i] = grid_curve[i] * delta + t1;
+	
+	// do padding necessary
+	this->pad(grid_curve);
+
+	// return the new Object-grid_curve-time_series
+	return new Object(grid_curve);
 }
+
 
 
 /////////////////////////////// CLASS TIME_SERIES ///////////////////////////////////////////
 
-time_series::time_series(std::vector <float> & input_vector, std::string & curve_name) : Object(curve_name), complexity(input_vector.size())
+///////////////////////// CONSTRUCTION / DESTRUCTION ///////////////////////////////////
+
+time_series::time_series(std::vector <float> & input_vector, std::string & curve_name) : Abstract_Object(curve_name)
 {
-	int dim = (int) input_vector.size();
 	float x_val = 1;
 
-	// by default time_series object has 2*dim size (dim for x-values, dim for y-values)
-	for (int i = 0; i < 2*dim; ++i)
+	for (int i = 0; i < (int) input_vector.size(); ++i)
 	{
-		if (i % 2 == 0)		// even positions hold x-values
-		{
-			vector.push_back(x_val);
-			x_val++;
-		}
-		else
-			vector.push_back(input_vector[(i-1)/2]); 	// odd positions hold y-values
+		data_vector.push_back(std::make_pair(x_val, input_vector[i]));
+		x_val++;
 	}
 }
 
-time_series::time_series(std::vector <float> & input_vector) : Object(input_vector) , complexity(input_vector.size()/2){}
+time_series::time_series(std::vector <std::pair <float, float> > input_vector)
+{
+	for (int i = 0; i < (int) input_vector.size(); ++i)
+	{
+		data_vector.push_back(input_vector[i]);
+	}
+}
+
+///////////////////////// GETTERS /////////////////////////////////////////////
 
 int time_series::get_complexity() const
 {
-	return this->complexity;
+	return (int) (this->data_vector).size();
 }
 
-double time_series::discrete_frechet_distance(const Object & P) const
+const std::pair <float, float> & time_series::get_ith(int i) const
 {
+	return this->data_vector[i];
+}
+
+
+////////////////////////  PRINTS ///////////////////////////////////////////////
+void time_series::print() const
+{
+	std::cout << "Time Series " << this->identifier << "-->   (";
+	for (int i = 0; i < this->get_complexity() - 1; ++i)
+		std::cout << "(" << std::get<0>(this->data_vector[i]) << ", " << std::get<1>(this->data_vector[i]) << ") , ";
+
+	std::cout << "(" << std::get<0>(this->data_vector[this->get_complexity()-1]) << ", " << std::get<1>(this->data_vector[this->get_complexity()-1]) << ") ) \n\n";
+}
+
+/////////////////////// OBJECT OPERATIONS ///////////////////////////////////////////
+
+double time_series::euclidean_distance(const Abstract_Object& abstract_object) const
+{
+	// for time_series euclidean_distance is not supported
+	std::cerr << "Warning : time_series::euclidean_distance : Caller object is of type time_series (undefined behavior)\n\n";
+	// return garbage value
+	return 0.0;
+}
+
+double time_series::discrete_frechet_distance(const Abstract_Object & abstract_object) const
+{
+	//time_series & P;
+	// downcast abstract object to type time_series
+	//try {
+	const time_series & P = dynamic_cast<const time_series &>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "time_series::discrete_frechet_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
 	// a vector of vectors that will serve as the 2D array for dynamic programming
-	std::vector <std::vector <double> > OPT(this->complexity, std::vector <double> (P.get_complexity()));
+	std::vector <std::vector <double> > OPT(this->get_complexity(), std::vector <double> (P.get_complexity()));
 	// initialize first square at (0,0)
-	OPT[0][0] = norm(this->vector[0], this->vector[1], P.get_ith(0), P.get_ith(1));
+	OPT[0][0] = norm(this->get_ith(0), P.get_ith(0));
 	// initialize first column of array
-	for (int i = 1; i < this->complexity; i++)
-		OPT[i][0] = std::max(OPT[i-1][0], norm(this->vector[2*i], this->vector[2*i+1], P.get_ith(0), P.get_ith(1)));
+	for (int i = 1; i < this->get_complexity(); i++)
+		OPT[i][0] = std::max(OPT[i-1][0], norm(this->get_ith(i), P.get_ith(0)));
 	// initialize first row of array
 	for (int j = 1; j < P.get_complexity(); j++)
-		OPT[0][j] = std::max(OPT[0][j-1], norm(this->vector[0], this->vector[1], P.get_ith(2*j), P.get_ith(2*j+1)));
+		OPT[0][j] = std::max(OPT[0][j-1], norm(this->get_ith(0), P.get_ith(j)));
 
 	// initialize rest of array (i > 0 and j > 0)
-	for (int i = 1; i < this->complexity; i++)
+	for (int i = 1; i < this->get_complexity(); i++)
 		for (int j = 1; j < P.get_complexity(); j++)
-			OPT[i][j] = std::max(std::min(OPT[i-1][j], std::min(OPT[i-1][j-1], OPT[i][j-1])), norm(this->vector[2*i], this->vector[2*i+1], P.get_ith(2*j), P.get_ith(2*j+1)));
+			OPT[i][j] = std::max(std::min(OPT[i-1][j], std::min(OPT[i-1][j-1], OPT[i][j-1])), norm(this->get_ith(i), P.get_ith(j)));
 
 
-	return OPT[this->complexity - 1][P.get_complexity() - 1];	// value for frechet distance is at top right corner of array
+	return OPT[this->get_complexity() - 1][P.get_complexity() - 1];	// value for frechet distance is at top right corner of array
+}
+
+const Object * time_series::to_Object() const
+{
+	std::vector <float> flattened_time_series;
+
+	for (int i = 0; i < this->get_complexity(); ++i)
+	{
+		flattened_time_series.push_back(std::get<0>(this->data_vector[i]));
+		flattened_time_series.push_back(std::get<1>(this->data_vector[i]));
+	}
+
+	return new Object(flattened_time_series);
+}
+
+std::vector <std::pair <int, int> > time_series::snap() const
+{
+	std::vector <std::pair <int, int> > snapped_time_series;
+
+	for (int i = 0; i < this->get_complexity(); ++i)
+	{
+		// snap each point to new integer point coordinate of grid
+		int x_value = floor(std::get<0>(this->data_vector[i]) / delta + 1/2);
+		int y_value = floor(std::get<1>(this->data_vector[i]) / delta + 1/2);
+		snapped_time_series.push_back(std::make_pair(x_value, y_value));
+	}
+
+	return snapped_time_series;
+}
+
+std::vector <std::pair <float, float> > time_series::remove_dupls(std::vector <std::pair <int, int> > & snapped_curve) const
+{
+	std::vector <std::pair <float, float> > grid_curve;
+	
+	// for each point of time_series, one boolean variable stating if it is duplicate or not
+	std::vector <bool> duplicate (this->get_complexity(), false);
+
+	// now we mark duplicate points from snapping
+	
+	int pos = 0;	// index of last non duplicate point
+
+	for (int i = 1; i < this->get_complexity(); ++i)	// for each point of time_series
+	{
+		// check if point i is the same as last non duplicate point
+		if (std::get<0>(snapped_curve[i]) == std::get<0>(snapped_curve[pos]) && 
+			std::get<1>(snapped_curve[i]) == std::get<1>(snapped_curve[pos]))
+			duplicate[i] = true;
+		else
+			pos = i;
+	}
+
+	// push back the non duplicate points to grid curve vector
+	for (int i = 0; i < this->get_complexity(); ++i)
+	{
+		if (duplicate[i] == false)
+		{
+			grid_curve.push_back(snapped_curve[i]);
+		}
+	}
+
+	return grid_curve;
+}
+
+void time_series::pad(std::vector <std::pair <float, float> > & grid_curve) const
+{
+	// finally check if complexity of snapped grid time_series diminished, and apply padding if necessary
+	// with special big padding number
+	unsigned long int M = 1000000;  /// further testing required
+	for (int i = (int) grid_curve.size(); i < this->get_complexity(); ++i)
+		grid_curve.push_back(std::make_pair(M, M));
 }
 
 
-double discrete_frechet(const Object & P, const Object & Q)
+Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
+{
+	// first of all the function snaps the given time series to grid, without multiplying by delta or shifting by t
+	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
+	
+	// vector holds snapped points-coordinates
+	std::vector <std::pair <int, int> > snapped_time_series = this->snap();
+
+	// vector of grid curve coordinates after removing duplicates from snapping
+	std::vector <std::pair <float, float> > grid_curve = this->remove_dupls(snapped_time_series);
+
+	// multiply by delta and shift by t to get final grid curve
+	for (int i = 0; i < (int) grid_curve.size(); ++i)
+	{
+		grid_curve[i].first = grid_curve[i].first * delta + t1;
+		grid_curve[i].second = grid_curve[i].second * delta + t2;
+	}
+	
+	// do padding necessary
+	this->pad(grid_curve);
+
+	// return the new grid_curve-time_series
+	return new time_series(grid_curve);
+}
+
+// metric wrappers
+
+double discrete_frechet(const Abstract_Object & P, const Abstract_Object & Q)
 {
 	return P.discrete_frechet_distance(Q);
 }
 
-double norm(float x1, float y1, float x2, float y2)
+double euclidean(const Abstract_Object & p, const Abstract_Object & q)
 {
-	return sqrt( ((double) x1 - (double) x2)  *  ((double) x1 - (double) x2) + ((double) y1 - (double) y2) * ((double) y1 - (double) y2) );
+	return p.euclidean_distance(q);
+}
+
+double norm(const std::pair <float, float> & point1, const std::pair <float, float> & point2)
+{
+	double x1 = (double) std::get<0>(point1);
+	double x2 = (double) std::get<0>(point2);
+	double y1 = (double) std::get<1>(point1);
+	double y2 = (double) std::get<1>(point2);
+	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }

@@ -11,7 +11,7 @@
 Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(num_of_Points)
 {
 	// create dataset array
-	dataset = new Object*[num_of_Points];
+	dataset = new Abstract_Object*[num_of_Points];
 
 	// we use C code to read file because its faster than C++ and given input files are massive
 	char * line = NULL;
@@ -42,7 +42,7 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		    char *str = strtok(line, "\t");
 		    int j = 0;
 
-		    // local variables that will serve as arguments for Object constructor
+		    // local variables that will serve as arguments for Abstract Object subclass constructor
 		    std::string object_name;
 		    std::vector <float> input_data(d);
 		    
@@ -59,18 +59,18 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		        str = strtok(NULL, "\t");
 		    }
 
-		    // different Object depending on algorithm
+		    // different Abstract_Object depending on algorithm
 		    if (algorithm == "LSH" || algorithm == "Hypercube")
 		    {
-		    	dataset[point_index] = new Object(input_data, object_name);		 // create Object
+		    	dataset[point_index] = new Object(input_data, object_name);		 // create Abstract Object of type Object
 		    }
 		    else if (algorithm == "Frechet" && metric_func == "discrete")
 		    {
-		    	dataset[point_index] = new time_series(input_data, object_name); // create time_series Object
+		    	dataset[point_index] = new time_series(input_data, object_name); // create Abstract Object of type time_series
 		    }
 		    else if (algorithm == "Frechet" && metric_func == "continuous")
 		    {
-		    	dataset[point_index] = new Object(input_data, object_name);		 // create Object (flattened time_series)
+		    	dataset[point_index] = new Object(input_data, object_name);		 // create Abstract Object of type Object (flattened time_series)
 		    }
 
 		}
@@ -105,7 +105,7 @@ int Dataset::get_num_of_Objects() const
 	return this->num_of_Objects;
 }
 
-const Object& Dataset::get_ith_object(int i) const
+const Abstract_Object& Dataset::get_ith_object(int i) const
 {
 	return *(this->dataset[i]);
 }

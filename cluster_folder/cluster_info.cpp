@@ -33,7 +33,7 @@ Cluster_info::Cluster_info()
 	// initialize the vector of clusters
 	for (int i = 0; i < K; ++i)
 	{
-		std::vector <const Object*> cluster;
+		std::vector <const Abstract_Object*> cluster;
 		clusters.push_back(cluster);
 	}
 
@@ -46,7 +46,7 @@ Cluster_info::~Cluster_info()
 }
 
 
-bool Cluster_info::execute(const Dataset & dataset, const std::string & output_file, const std::string & method, bool complete, double (*metric)(const Object &, const Object &))
+bool Cluster_info::execute(const Dataset & dataset, const std::string & output_file, const std::string & method, bool complete, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	std::ofstream file (output_file, std::ios::out);		// open output file for output operations
 	
@@ -143,7 +143,7 @@ bool Cluster_info::execute(const Dataset & dataset, const std::string & output_f
 	return true;
 }
 
-void Cluster_info::K_means_init(const Dataset & dataset, double (*metric)(const Object &, const Object &))
+void Cluster_info::K_means_init(const Dataset & dataset, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	// following block of code picks a uniformly random integer that will serve as the initial centroid index
 	const int num_of_Objects = dataset.get_num_of_Objects();
@@ -159,7 +159,7 @@ void Cluster_info::K_means_init(const Dataset & dataset, double (*metric)(const 
 	// set initial centroid
 	centroids[0]->set(dataset.get_ith_object(initial_centroid));
 
-	// array D will hold min distance to some centroid for every Object-point
+	// array D will hold min distance to some centroid for every Object
 	std::vector <float> D(num_of_Objects);
 	// array holding for each object, each nearest centroid thus far (if object is centroid, nearest centroid is itself) 
 	std::vector <int> nearest_centroid(num_of_Objects);
@@ -190,7 +190,7 @@ void Cluster_info::K_means_init(const Dataset & dataset, double (*metric)(const 
 			// for each non-centroid Object			
 			if (nearest_centroid[i] != i)
 			{
-				const Object * object = & dataset.get_ith_object(i);
+				const Abstract_Object * object = & dataset.get_ith_object(i);
 				float dist;
 
 				// if distance to newly added centroid, is smaller than min distance to any centroid thus far
@@ -239,7 +239,7 @@ void Cluster_info::K_means_init(const Dataset & dataset, double (*metric)(const 
 
 
 // clustering using exact lloyd's as assignment method
-void Cluster_info::exact_lloyds(const Dataset & dataset, double (*metric)(const Object &, const Object &))
+void Cluster_info::exact_lloyds(const Dataset & dataset, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	bool converged = false;
 
@@ -256,7 +256,7 @@ void Cluster_info::exact_lloyds(const Dataset & dataset, double (*metric)(const 
 		// create new clusters by assigning each object to its exact nearest centroid
 		for (int i = 0; i < num_of_Objects; ++i)
 		{
-			const Object * object = & dataset.get_ith_object(i);
+			const Abstract_Object * object = & dataset.get_ith_object(i);
 			double min_dist = (*metric)(*object, *centroids[0]);
 			int cluster_index = 0;
 
@@ -293,7 +293,7 @@ T max(T x, T y){
 }
 
 // clustering using lsh range search as assignment method
-void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, double (*metric)(const Object &, const Object &)){
+void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
 	bool converged = false;
 
 	//No need for something complicated, just calculate the distances and make the necessary update, exact_lloyds does that
@@ -344,7 +344,7 @@ void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, double (
 				// otherwise it has been found just now so add it to the map and do flag = true
 				for (auto item : lsh.range_search(*(this->centroids[i]), R, metric, R2)){
 					double dist = std::get<0>(item);
-					const Object* obj_p = std::get<1>(item);
+					const Abstract_Object* obj_p = std::get<1>(item);
 					std::string id = obj_p->get_name();
 					it = map.find(id);
 
@@ -374,7 +374,7 @@ void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, double (
 		// create new clusters by assigning each object to its exact nearest centroid
 		for (int i = 0; i < num_of_Objects; ++i)
 		{
-			const Object * object = & dataset.get_ith_object(i);
+			const Abstract_Object * object = & dataset.get_ith_object(i);
 
 			std::string id = object->get_name();
 
@@ -413,7 +413,7 @@ void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, double (
 }
 
 // clustering using hypercube range search as assignment method
-void Cluster_info::cube_range_search_clustering(const Dataset & dataset, double (*metric)(const Object &, const Object &)){
+void Cluster_info::cube_range_search_clustering(const Dataset & dataset, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
 	bool converged = false;
 
 	//No need for something complicated, just calculate the distances and make the necessary update, exact_lloyds does that
@@ -464,7 +464,7 @@ void Cluster_info::cube_range_search_clustering(const Dataset & dataset, double 
 				// otherwise it has been found just now so add it to the map and do flag = true
 				for (auto item : cube.range_search(*(this->centroids[i]), R, metric, R2)){
 					double dist = std::get<0>(item);
-					const Object* obj_p = std::get<1>(item);
+					const Abstract_Object* obj_p = std::get<1>(item);
 					std::string id = obj_p->get_name();
 					it = map.find(id);
 
@@ -494,7 +494,7 @@ void Cluster_info::cube_range_search_clustering(const Dataset & dataset, double 
 		// create new clusters by assigning each object to its exact nearest centroid
 		for (int i = 0; i < num_of_Objects; ++i)
 		{
-			const Object * object = & dataset.get_ith_object(i);
+			const Abstract_Object * object = & dataset.get_ith_object(i);
 
 			std::string id = object->get_name();
 
@@ -532,7 +532,7 @@ void Cluster_info::cube_range_search_clustering(const Dataset & dataset, double 
 }
 
 
-bool Cluster_info::update(double (*metric)(const Object &, const Object &))
+bool Cluster_info::update(double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	double e = 1;
 	double avg_deviation = 0.0;
@@ -591,7 +591,7 @@ int binary_search(const std::vector <float> & P, float x, int lower_index, int u
 }
 
 // finds silhouette for each cluster, and for clustering in total
-std::vector <double> Cluster_info::silhouette(double (*metric)(const Object &, const Object &)) const{
+std::vector <double> Cluster_info::silhouette(double (*metric)(const Abstract_Object &, const Abstract_Object &)) const{
 	
 	double s_total = 0;
 
@@ -610,7 +610,7 @@ std::vector <double> Cluster_info::silhouette(double (*metric)(const Object &, c
 
 		for (int j = 0 ; j < cl_size ; j++){
 
-			const Object* obj_p = this->clusters[i][j];
+			const Abstract_Object* obj_p = this->clusters[i][j];
 			
 			double a_i = 0.0, b_i = 0.0;
 			
