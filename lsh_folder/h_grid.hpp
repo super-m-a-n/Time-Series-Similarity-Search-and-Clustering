@@ -11,8 +11,7 @@ class h_grid
 {
 private:
 	// a single precision real t uniformly in [0,delta)^2
-	float t1;
-	float t2;	
+	std::vector<double> t;	
 
 public:
 	// default constructor, randomly chooses t

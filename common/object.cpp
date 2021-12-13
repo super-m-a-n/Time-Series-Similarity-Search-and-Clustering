@@ -190,7 +190,7 @@ const Object * Object::to_Object() const
 }	
 
 
-std::vector <int> Object::snap() const
+std::vector <int> Object::snap(const std::vector<double>& t) const
 {
 	std::vector <int> snapped_object;
 
@@ -241,20 +241,20 @@ void Object::pad(std::vector <float> & grid_curve) const
 		grid_curve.push_back(M);
 }
 
-Abstract_Object * Object::to_grid_curve(float t1, float t2) const
+Abstract_Object * Object::to_grid_curve(const std::vector<double>& t) const
 {
 	// first of all the function snaps the caller Object-time series to grid, without multiplying by delta or shifting by t
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <int> snapped_object = this->snap();
+	std::vector <int> snapped_object = this->snap(t);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
 	std::vector <float> grid_curve = this->remove_dupls(snapped_object);
 
 	// multiply by delta and shift by t to get final grid curve
 	for (int i = 0; i < (int) grid_curve.size(); ++i)
-		grid_curve[i] = grid_curve[i] * delta + t1;
+		grid_curve[i] = grid_curve[i] * delta + t[0];
 	
 	// do padding necessary
 	this->pad(grid_curve);
@@ -365,15 +365,15 @@ const Object * time_series::to_Object() const
 	return new Object(flattened_time_series);
 }
 
-std::vector <std::pair <int, int> > time_series::snap() const
+std::vector <std::pair <int, int> > time_series::snap(const std::vector<double>& t) const
 {
 	std::vector <std::pair <int, int> > snapped_time_series;
 
 	for (int i = 0; i < this->get_complexity(); ++i)
 	{
 		// snap each point to new integer point coordinate of grid
-		int x_value = floor(std::get<0>(this->data_vector[i]) / delta + 1/2);
-		int y_value = floor(std::get<1>(this->data_vector[i]) / delta + 1/2);
+		int x_value = floor((std::get<0>(this->data_vector[i]) - t[0]) / delta + 1/2);
+		int y_value = floor((std::get<1>(this->data_vector[i]) - t[1]) / delta + 1/2);
 		snapped_time_series.push_back(std::make_pair(x_value, y_value));
 	}
 
@@ -423,13 +423,13 @@ void time_series::pad(std::vector <std::pair <float, float> > & grid_curve) cons
 }
 
 
-Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
+Abstract_Object * time_series::to_grid_curve(const std::vector<double> & t) const
 {
 	// first of all the function snaps the given time series to grid, without multiplying by delta or shifting by t
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <std::pair <int, int> > snapped_time_series = this->snap();
+	std::vector <std::pair <int, int> > snapped_time_series = this->snap(t);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
 	std::vector <std::pair <float, float> > grid_curve = this->remove_dupls(snapped_time_series);
@@ -437,8 +437,8 @@ Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
 	// multiply by delta and shift by t to get final grid curve
 	for (int i = 0; i < (int) grid_curve.size(); ++i)
 	{
-		grid_curve[i].first = grid_curve[i].first * delta + t1;
-		grid_curve[i].second = grid_curve[i].second * delta + t2;
+		grid_curve[i].first = grid_curve[i].first * delta + t[0];
+		grid_curve[i].second = grid_curve[i].second * delta + t[1];
 	}
 	
 	// do padding necessary

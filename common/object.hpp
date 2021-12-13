@@ -44,7 +44,7 @@ public:
 	virtual const Object * to_Object() const = 0;
 
 	// converts caller Abstract Object to grid curve
-	virtual Abstract_Object * to_grid_curve(float t1, float t2) const = 0;
+	virtual Abstract_Object * to_grid_curve(const std::vector<double>& t) const = 0;
 	
 };
 
@@ -108,13 +108,13 @@ public:
 	const Object * to_Object() const;
 	
 	// returns a vector with snapped coordinates to grid integers
-	std::vector <int> snap() const;
+	std::vector <int> snap(const std::vector<double>& t) const;
 	// returns a vector with snapped coordinates to grid integers after removing duplicates
 	std::vector <float> remove_dupls(std::vector <int> & snapped_curve) const;
 	// pads given vector of grid coordinates if necessary
 	void pad(std::vector <float> & grid_curve) const;
 	// converts caller Abstract Object to grid curve
-	Abstract_Object * to_grid_curve(float t1, float t2) const;
+	Abstract_Object * to_grid_curve(const std::vector<double>& t) const;
 
 };
 
@@ -153,12 +153,12 @@ public:
 	const Object * to_Object() const;
 	
 	// returns a vector with snapped points to grid integers
-	std::vector <std::pair <int, int> > snap() const;
+	std::vector <std::pair <int, int> > snap(const std::vector<double>& t) const;
 	// returns a vector with snapped points to grid integers after removing duplicates
 	std::vector <std::pair <float, float> > remove_dupls(std::vector <std::pair <int, int> > & snapped_curve) const;
 	// pads given vector of grid points if necessary
 	void pad(std::vector <std::pair <float, float> > & grid_curve) const;
-	Abstract_Object * to_grid_curve(float t1, float t2) const;
+	Abstract_Object * to_grid_curve(const std::vector<double>& t) const;
 };
 
 

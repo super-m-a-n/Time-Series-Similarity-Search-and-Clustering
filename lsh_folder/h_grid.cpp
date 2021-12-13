@@ -15,13 +15,13 @@ h_grid::h_grid()
 	std::random_device rd;
 	std::mt19937 generator(rd());
 	std::uniform_real_distribution<float> distr(lower_bound, upper_bound);
-	
-	t1 = distr(generator);
-	t2 = distr(generator);
+	t.push_back(distr(generator));
+	t.push_back(distr(generator));
+
 }
 
 Abstract_Object * h_grid::operator()(const Abstract_Object& time_series) const
 {
-	return time_series.to_grid_curve(this->t1, this->t2);
+	return time_series.to_grid_curve(this->t);
 }
 	
