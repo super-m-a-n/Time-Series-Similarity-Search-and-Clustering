@@ -108,7 +108,7 @@ public:
 	const Object * to_Object() const;
 	
 	// returns a vector with snapped coordinates to grid integers
-	std::vector <int> snap() const;
+	std::vector <int> snap(float t1) const;
 	// returns a vector with snapped coordinates to grid integers after removing duplicates
 	std::vector <float> remove_dupls(std::vector <int> & snapped_curve) const;
 	// pads given vector of grid coordinates if necessary
@@ -153,7 +153,7 @@ public:
 	const Object * to_Object() const;
 	
 	// returns a vector with snapped points to grid integers
-	std::vector <std::pair <int, int> > snap() const;
+	std::vector <std::pair <int, int> > snap(float t1, float t2) const;
 	// returns a vector with snapped points to grid integers after removing duplicates
 	std::vector <std::pair <float, float> > remove_dupls(std::vector <std::pair <int, int> > & snapped_curve) const;
 	// pads given vector of grid points if necessary

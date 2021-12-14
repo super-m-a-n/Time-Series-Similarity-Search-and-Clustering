@@ -190,12 +190,12 @@ const Object * Object::to_Object() const
 }	
 
 
-std::vector <int> Object::snap() const
+std::vector <int> Object::snap(float t1) const
 {
 	std::vector <int> snapped_object;
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		snapped_object.push_back(floor(this->data_vector[i] / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
+		snapped_object.push_back(floor((this->data_vector[i] - t1) / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
 
 	return snapped_object;
 }
@@ -247,7 +247,7 @@ Abstract_Object * Object::to_grid_curve(float t1, float t2) const
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <int> snapped_object = this->snap();
+	std::vector <int> snapped_object = this->snap(t1);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
 	std::vector <float> grid_curve = this->remove_dupls(snapped_object);
@@ -365,15 +365,15 @@ const Object * time_series::to_Object() const
 	return new Object(flattened_time_series);
 }
 
-std::vector <std::pair <int, int> > time_series::snap() const
+std::vector <std::pair <int, int> > time_series::snap(float t1, float t2) const
 {
 	std::vector <std::pair <int, int> > snapped_time_series;
 
 	for (int i = 0; i < this->get_complexity(); ++i)
 	{
 		// snap each point to new integer point coordinate of grid
-		int x_value = floor(std::get<0>(this->data_vector[i]) / delta + 1/2);
-		int y_value = floor(std::get<1>(this->data_vector[i]) / delta + 1/2);
+		int x_value = floor((std::get<0>(this->data_vector[i]) - t1) / delta + 1/2);
+		int y_value = floor((std::get<1>(this->data_vector[i]) - t2) / delta + 1/2);
 		snapped_time_series.push_back(std::make_pair(x_value, y_value));
 	}
 
@@ -429,7 +429,7 @@ Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <std::pair <int, int> > snapped_time_series = this->snap();
+	std::vector <std::pair <int, int> > snapped_time_series = this->snap(t1, t2);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
 	std::vector <std::pair <float, float> > grid_curve = this->remove_dupls(snapped_time_series);
