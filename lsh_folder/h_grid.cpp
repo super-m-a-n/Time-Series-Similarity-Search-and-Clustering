@@ -7,17 +7,16 @@
 #include <cmath>
 #include <vector>
 
-h_grid::h_grid()
-{	
-	// picks single precision real t uniformly in [0,delta)^2
+// create a signle precision reat t uniformly in [0,delta)^dim,
+h_grid::h_grid(int dim){
 	const float lower_bound = 0.0;
 	const float upper_bound = (float) delta;
 	std::random_device rd;
 	std::mt19937 generator(rd());
 	std::uniform_real_distribution<float> distr(lower_bound, upper_bound);
-	t.push_back(distr(generator));
-	t.push_back(distr(generator));
-
+	for (int i = 0 ; i  < dim ; i++){
+		t.push_back(distr(generator));
+	}
 }
 
 Abstract_Object * h_grid::operator()(const Abstract_Object& time_series) const

@@ -176,7 +176,7 @@ double Object::discrete_frechet_distance(const Abstract_Object & abstract_object
 	// for plain object frechet_distance is not supported
 	std::cerr << "Warning : Object::discrete_frechet_distance : Caller object is of type Object (undefined behavior)\n\n";
 	// return garbage value
-	return 0.0;
+	return -1.0;
 }
 
 const Object * Object::to_Object() const
@@ -195,7 +195,7 @@ std::vector <int> Object::snap(const std::vector<double>& t) const
 	std::vector <int> snapped_object;
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		snapped_object.push_back(floor(this->data_vector[i] / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
+		snapped_object.push_back(floor((this->data_vector[i] - t[0] )/ delta + 1/2));		// snap each coordinate to new integer coordinate of grid
 
 	return snapped_object;
 }
@@ -318,7 +318,7 @@ double time_series::euclidean_distance(const Abstract_Object& abstract_object) c
 	// for time_series euclidean_distance is not supported
 	std::cerr << "Warning : time_series::euclidean_distance : Caller object is of type time_series (undefined behavior)\n\n";
 	// return garbage value
-	return 0.0;
+	return -1.0;
 }
 
 double time_series::discrete_frechet_distance(const Abstract_Object & abstract_object) const

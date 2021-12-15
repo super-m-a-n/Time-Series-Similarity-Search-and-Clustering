@@ -5,7 +5,7 @@
 #include <vector>
 #include "object.hpp"
 
-// class h_grid is used to hold info about an h grid hash function (maps time series to G_delta 2-dimensional grid or 1-dimensional grid)
+// class h_grid is used to hold info about an h grid hash function ( maps time series to G_delta 2-dimensional grid or 1-dimensional grid)
 
 class h_grid
 {
@@ -14,8 +14,8 @@ private:
 	std::vector<double> t;	
 
 public:
-	// default constructor, randomly chooses t
-	h_grid();
+	// create a signle precision reat t uniformly in [0,delta)^dim, (Initialised to 2 for the needs of this project)
+	h_grid(int dim = 2);
 	// overload of () operator, so that each h_grid object can be used as a "function"
 	Abstract_Object * operator()(const Abstract_Object& time_series) const;
 };

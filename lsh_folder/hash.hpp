@@ -17,12 +17,16 @@ private:
 	int size;						// number of elements added
 	int capacity;					// number of buckets
 	g_hash g;						// amplified g hash function for hash table
-	h_grid h_delta;					// grid hash function used for time series similarity search
+	h_grid h_delta;					// grid hash function used for time series similarity search (and maps points of dimension dim)
 
 
 public:
 	// constructor
-	hash_table(int numBuckets);
+	// dim is the dimension od the grid used. 
+	//	For this project a 2-dimension grid suffices since the snapping of an object is compatible even if
+	// grid has higher dimension than the object curve's complexity and in this project, the object curves will have complexity of either 1 or 2
+
+	hash_table(int numBuckets, int dim = 2);
 	// destructor
 	~hash_table();
 	// returns number of elements currently in hash table
