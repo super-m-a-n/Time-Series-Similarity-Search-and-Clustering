@@ -196,6 +196,7 @@ std::vector <int> Object::snap(const std::vector<double>& t) const
 
 	for (int i = 0; i < this->get_dim(); ++i)
 		snapped_object.push_back(floor((this->data_vector[i] - t[0] )/ delta + 1/2));		// snap each coordinate to new integer coordinate of grid
+	return snapped_object;
 }
 std::vector <float> Object::remove_dupls(std::vector <int> & snapped_curve) const
 {
@@ -372,6 +373,8 @@ std::vector <std::pair <int, int> > time_series::snap(const std::vector<double>&
 		int x_value = floor((std::get<0>(this->data_vector[i]) - t[0]) / delta + 1/2);
 		int y_value = floor((std::get<1>(this->data_vector[i]) - t[1]) / delta + 1/2);
 	}
+
+	return snapped_time_series;
 }
 
 std::vector <std::pair <float, float> > time_series::remove_dupls(std::vector <std::pair <int, int> > & snapped_curve) const
