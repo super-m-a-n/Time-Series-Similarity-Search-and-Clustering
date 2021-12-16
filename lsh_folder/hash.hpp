@@ -14,6 +14,7 @@ class hash_table
 {
 private:
 	std::list <std::pair <const Abstract_Object*, uint32_t> > * table;		// hash table implemented as an array of linked lists containing pointers to Abstract-Objects and locality ID for each object
+	
 	int size;						// number of elements added
 	int capacity;					// number of buckets
 	g_hash g;						// amplified g hash function for hash table
@@ -34,7 +35,9 @@ public:
 	// returns number of buckets currently in hash table
 	int get_capacity() const;
 	// inserts given point-object into hash table
-	void insert(const Abstract_Object& p);
+	// complexity is the original complexity of the curves before they passed the filter
+	// (necessary for the query curves)
+	void insert(const Abstract_Object& p, int complexity = 0);
 	// returns bucket index in which given object p hashes in and its locality ID in object_id
 	int get_bucket_index(const Abstract_Object& p, uint32_t & object_id);
 	// returns bucket-list indicated by bucket index

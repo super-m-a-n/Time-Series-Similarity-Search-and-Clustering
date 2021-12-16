@@ -5,8 +5,11 @@
 #include <cstdlib>
 #include <vector>
 #include "dataset.hpp"
+#include "assist_functions.hpp"
 #include "object.hpp"
 #include "params.hpp"
+
+
 
 Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(num_of_Points)
 {
@@ -69,8 +72,11 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		    	dataset[point_index] = new time_series(input_data, object_name); // create Abstract Object of type time_series
 		    }
 		    else if (algorithm == "Frechet" && metric_func == "continuous")
-		    {
-		    	dataset[point_index] = new Object(input_data, object_name);		 // create Abstract Object of type Object (flattened time_series)
+		    {	
+
+				std::vector<float> filtered_curve = filter_input_curve(input_data); // Filter the curve
+
+		    	dataset[point_index] = new Object(filtered_curve, object_name);		 // create Abstract Object of type Object (flattened time_series)
 		    }
 
 		}

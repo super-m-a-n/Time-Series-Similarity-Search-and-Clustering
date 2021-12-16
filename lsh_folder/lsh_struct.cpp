@@ -13,8 +13,24 @@
 #include "hash.hpp"
 #include "dataset.hpp"
 #include "object.hpp"
+#include "fred/include/frechet.hpp"
 
-lsh_struct::lsh_struct(int hash_table_size)
+#if 1
+Curve* transform_to_Fred_Curve(const Object& obj){
+
+	Points points = Points(1);
+
+	int size = obj.get_dim();
+	for (int i = 0 ; i < size ; i++){
+		Point point = Point(1);
+		point.set(0, obj.get_ith(i));
+		points.add(point);
+	}
+	return new Curve(points);
+}
+#endif
+
+lsh_struct::lsh_struct(int hash_table_size): curve_vect()//, complexity(-1)
 {
 	// lsh_hash_struct is an array of pointers to L hash tables
 	lsh_hash_struct = new hash_table*[L];
@@ -27,7 +43,9 @@ lsh_struct::lsh_struct(int hash_table_size)
 
 lsh_struct::~lsh_struct()
 {
-
+	for (long unsigned int i = 0 ; i  < curve_vect.size() ; i++){
+		delete curve_vect[i];
+	}
 	for (int i = 0; i < L; ++i)
 		delete lsh_hash_struct[i];
 
@@ -38,11 +56,15 @@ void lsh_struct::import_data(const Dataset & dataset)
 {
 	int num_of_Objects = dataset.get_num_of_Objects();
 
-	for (int i = 0; i < L; ++i)						// for each of the L hash-tables
+	for (int i = 0; i < num_of_Objects; ++i)					// for each of the point_objects
 	{
-		for (int j = 0; j < num_of_Objects; ++j)	// for each of the point-Objects
+		const Abstract_Object& abstract_obj = dataset.get_ith_object(i);
+		if (algorithm == "Frechet" && metric_func == "continuous"){
+			curve_vect.push_back(transform_to_Fred_Curve(dynamic_cast<const Object&>(abstract_obj)));
+		}
+		for (int j = 0; j < L; ++j)		// for each of the L hashtables
 		{
-			(this->lsh_hash_struct[i])->insert(dataset.get_ith_object(j)); // insert object into hash-table
+			(this->lsh_hash_struct[j])->insert(abstract_obj); // insert object into hash-table
 		}
 	}
 
@@ -244,16 +266,29 @@ std::vector <std::pair <double, const Abstract_Object*> > lsh_struct::exact_near
 {
 	// run brute force exact kNN
 	int num_of_Objects = dataset.get_num_of_Objects();
-
+	Curve* fred_curve = nullptr;
+	if (algorithm == "Frechet" && metric_func == "continuous"){
+		fred_curve = transform_to_Fred_Curve(dynamic_cast<const Object&> (query_object));
+	}
 	// initialize a max heap priority queue, that will store the distance of Object from query object and a pointer to the Object itself
 	std::priority_queue <std::pair <double, const Abstract_Object*> > max_heap;
 
 	// check each of the dataset objects by brute force
 	for (int i = 0; i < num_of_Objects; ++i)
 	{
-		// find its distance from query object
-		double dist = (*metric)(query_object, dataset.get_ith_object(i));
-
+		double dist = 0;
+		if (algorithm == "Frechet" && metric_func == "continuous"){
+			if (fred_curve->complexity() >= 2 && curve_vect[i]->complexity() >= 2){
+				dist = (Frechet::Continuous::distance(*(curve_vect[i]), *fred_curve)).value;
+			}
+			else{
+				dist = (*metric)(query_object, dataset.get_ith_object(i));
+			}
+		}
+		else {
+			// find its distance from query object
+			dist = (*metric)(query_object, dataset.get_ith_object(i));
+		}
 		if ((int) max_heap.size() < N)	// if we haven't found N neighbors yet
 			max_heap.push(std::make_pair(dist, & dataset.get_ith_object(i)));
 		else
@@ -277,7 +312,9 @@ std::vector <std::pair <double, const Abstract_Object*> > lsh_struct::exact_near
 		nearest[i] = max_heap.top();	// save nearest neighbor
 		max_heap.pop();
 	}
-
+	if (algorithm == "Frechet" && metric_func == "continuous"){
+		delete fred_curve;
+	}
 	return nearest;
 }
 

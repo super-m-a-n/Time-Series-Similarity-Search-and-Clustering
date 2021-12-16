@@ -12,13 +12,30 @@
 #include "search_method.hpp"
 #include <set>
 
+// using the fred library to store Curves
+// But only used in continuous frechet and when an input curve is filtered then make a copy of it but of Class Curve
+#include "fred/include/curve.hpp"
+
+
+
 // class lsh_struct contains all the data structures used by lsh
 // namely L hash-tables
 class lsh_struct : public search_method
 {
 private:
 	hash_table ** lsh_hash_struct;	// an array of pointers to L hashtables
+	
 
+	std::vector<Curve*> curve_vect; // Used to store the input data as curves of the fred library for
+									// for compatibility with the continuous frechet distance of the fred library
+									// This vector is always empty if the distance to be calculated in the exeutable is not the continuous frechet
+									
+//int complexity;						// In case of continuous frechet, after the filtering, all curves will have
+										// almost certainly smaller complexity and not necessary the same
+										// That means that if a query curve, after the filtering,snapping and min-max,
+										// If it ends up with a higher complexity than all filtered curves' complexities
+										// Then it is impossible to be inserted into the vector LSH
+										// Thus keep the original input curve complexity
 public:
 	// constructor, creates the L hashtables, each with number of buckets = hash_table_size
 	lsh_struct(int hash_table_size);

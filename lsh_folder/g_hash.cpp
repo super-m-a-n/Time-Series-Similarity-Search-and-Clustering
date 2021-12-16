@@ -30,7 +30,7 @@ g_hash::g_hash()
 
 int g_hash::operator()(const Abstract_Object& abstract_object, int table_size, uint32_t & object_id) const
 {
-	uint32_t M = 4294967291;		// large prime M = 2^32 - 5, <= 32 bits
+	uint32_t M = 0xfffffffb;		// large prime M = 2^32 - 5, <= 32 bits
 
 	// convert abstract object to Object
 	const Object * p = abstract_object.to_Object();

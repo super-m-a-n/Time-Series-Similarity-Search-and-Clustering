@@ -20,7 +20,7 @@
 int N = 1, R, d = 0, w, n = 0;		// global
 int k, L;							// vector lsh
 int d1, probes, M;					// vector hypercube
-double delta;				    	// curve lsh (frechet)
+double delta, epsilon = 0.00001;		// curve lsh (frechet)
 std::string algorithm, metric_func;	// variable for algorithm , metric used for frechet
 
 int main(int argc, char const *argv[])
@@ -120,7 +120,9 @@ int main(int argc, char const *argv[])
 			}
 		}
 
-		//metric_function = (metric_func == "discrete") ? discrete_frechet : continuous_frechet; 
+		//If the metric function is the continuous frechet, the distance will not be between Abstract Objects but
+		// between fred Curves using the continuous frechet distance of the fred library.
+		// However, for the approximate neighbors, the discrete frechet will be used (but in modified curves unlike the discrete frechet case)
 		metric_function = discrete_frechet;
 	}
 

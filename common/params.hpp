@@ -14,6 +14,7 @@ extern int M;
 extern int probes;
 extern int K;	// the number of clusters-centroids
 
+extern double epsilon;  // the epsilon constant used for filtering 
 extern double delta;	// the number used to define the grids for snapping the curves
 extern std::string algorithm;	// algorithm used
 extern std::string metric_func;      // metric used

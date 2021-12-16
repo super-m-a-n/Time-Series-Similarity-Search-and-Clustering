@@ -17,6 +17,8 @@ public:
 	// create a signle precision reat t uniformly in [0,delta)^dim, (Initialised to 2 for the needs of this project)
 	h_grid(int dim = 2);
 	// overload of () operator, so that each h_grid object can be used as a "function"
+	// complexity is the original complexity of the curves before they passed the filter
+	// (necessary for query compatibility with query curves
 	Abstract_Object * operator()(const Abstract_Object& time_series) const;
 };
 

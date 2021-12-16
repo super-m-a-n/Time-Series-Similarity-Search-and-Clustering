@@ -107,10 +107,14 @@ public:
 	// converts caller object to an object of type Object
 	const Object * to_Object() const;
 	
+	//In case of continuous frechet, 
+	std::vector <int>* filtering(const Object& obj) const;
 	// returns a vector with snapped coordinates to grid integers
 	std::vector <int> snap(const std::vector<double>& t) const;
 	// returns a vector with snapped coordinates to grid integers after removing duplicates
-	std::vector <float> remove_dupls(std::vector <int> & snapped_curve) const;
+	std::vector <int> remove_dupls(std::vector <int> & snapped_curve) const;
+	// Get extrema
+	std::vector <float> get_extrema(std::vector <int> & snapped_curve_no_dupl) const;
 	// pads given vector of grid coordinates if necessary
 	void pad(std::vector <float> & grid_curve) const;
 	// converts caller Abstract Object to grid curve
