@@ -609,9 +609,9 @@ Abstract_Object * time_series::to_grid_curve(const std::vector<double> & t) cons
 template<typename T>
 int argmin(T x, T y, T z){
 	T min = x;
-	int pos = 1;
-	if (y < min) { min = y; pos = 2;}
-	if (z < min) { min = z; pos = 3;}
+	int pos = 0;
+	if (y < min) { min = y; pos = 1;}
+	if (z < min) { min = z; pos = 2;}
 	return pos;
 }
 
@@ -643,7 +643,7 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 	// last point of each curve is definitely part (endpoint actually) of best traversal
 	best_traversal.push_front(std::make_pair(i, j));
 
-	// while we have not reached starting point for both curves
+	// while we have not reached starting point for either curves
 	while(i != 0 && j != 0)
 	{
 		int min_index = argmin(OPT[i-1][j], OPT[i][j-1], OPT[i-1][j-1]);
@@ -653,6 +653,25 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 			best_traversal.push_front(std::make_pair(i, --j));
 		else
 			best_traversal.push_front(std::make_pair(--i, --j));
+	}
+
+	// complete traversal by adding pair of points until we reach starting point for both curves
+	if (i == 0 && j != 0)	// if we have reached starting point for first curve but not for second curve
+	{
+		while(j != 0)
+		{
+			// complete traversal by adding points of second curve
+			best_traversal.push_front(std::make_pair(i, --j));
+		}
+	}
+	else if (j == 0 && i != 0)	// else if we have reached starting point for second curve but not for first curve
+	{
+		while(i != 0)
+		{
+			// complete traversal by adding points of first curve
+			best_traversal.push_front(std::make_pair(--i, j));
+		}
+
 	}
 
 	// compute the mean curve from best traversal
