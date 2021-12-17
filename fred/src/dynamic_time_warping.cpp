@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <vector>
 #include <limits>
 #include <chrono>
-
+#include <queue>
 #include "dynamic_time_warping.hpp"
 
 namespace Dynamic_Time_Warping {

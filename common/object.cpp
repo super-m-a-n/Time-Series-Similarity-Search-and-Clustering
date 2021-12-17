@@ -12,7 +12,6 @@
 #include <list>
 
 
-
 /////////////////////////////// CLASS OBJECT ///////////////////////////////////////////
 
 ///////////////////////// CONSTRUCTION / DESTRUCTION ///////////////////////////////////
@@ -189,10 +188,33 @@ double Object::euclidean_distance(const Abstract_Object & abstract_object) const
 
 double Object::discrete_frechet_distance(const Abstract_Object & abstract_object) const
 {
-	// for plain object frechet_distance is not supported
-	std::cerr << "Warning : Object::discrete_frechet_distance : Caller object is of type Object (undefined behavior)\n\n";
-	// return garbage value
-	return 0.0;
+	//time_series & P;
+	// downcast abstract object to type time_series
+	//try {
+	const Object & P = dynamic_cast<const Object &>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "time_series::discrete_frechet_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
+	// a vector of vectors that will serve as the 2D array for dynamic programming
+	std::vector <std::vector <double> > OPT(this->get_dim(), std::vector <double> (P.get_dim()));
+	// initialize first square at (0,0)
+	OPT[0][0] = std::abs(this->get_ith(0) - P.get_ith(0));
+	// initialize first column of array
+	for (int i = 1; i < this->get_dim(); i++)
+		OPT[i][0] = std::max(OPT[i-1][0], (double) std::abs(this->get_ith(i) - P.get_ith(0)));
+	// initialize first row of array
+	for (int j = 1; j < P.get_dim(); j++)
+		OPT[0][j] = std::max(OPT[0][j-1], (double) std::abs(this->get_ith(0) - P.get_ith(j)));
+
+	// initialize rest of array (i > 0 and j > 0)
+	for (int i = 1; i < this->get_dim(); i++)
+		for (int j = 1; j < P.get_dim(); j++)
+			OPT[i][j] = std::max(std::min(OPT[i-1][j], std::min(OPT[i-1][j-1], OPT[i][j-1])), (double) std::abs(this->get_ith(i) - P.get_ith(j)));
+
+
+	return OPT[this->get_dim() - 1][P.get_dim() - 1];	// value for frechet distance is at top right corner of array
 }
 
 const Object * Object::to_Object() const
@@ -206,19 +228,19 @@ const Object * Object::to_Object() const
 }	
 
 
-std::vector <int> Object::snap(float t1) const
+std::vector <int> Object::snap(const std::vector<double>& t) const
 {
 	std::vector <int> snapped_object;
 
 	for (int i = 0; i < this->get_dim(); ++i)
-		snapped_object.push_back(floor((this->data_vector[i] - t1) / delta + 1/2));		// snap each coordinate to new integer coordinate of grid
-
+		snapped_object.push_back(floor((this->data_vector[i] - t[0] )/ delta + 1/2));		// snap each coordinate to new integer coordinate of grid
+	
 	return snapped_object;
 }
 
-std::vector <float> Object::remove_dupls(std::vector <int> & snapped_curve) const
+std::vector <int> Object::remove_dupls(std::vector <int> & snapped_curve) const
 {
-	std::vector <float> grid_curve;
+	std::vector <int> grid_curve;
 	
 	// for each coordinate of Object, one boolean variable stating if it is duplicate or not
 	std::vector <bool> duplicate (this->get_dim(), false);
@@ -248,30 +270,75 @@ std::vector <float> Object::remove_dupls(std::vector <int> & snapped_curve) cons
 	return grid_curve;
 }
 
+std::vector <float> Object::get_extrema(std::vector <int> & snapped_curve_no_dupl) const{
+		int size = snapped_curve_no_dupl.size();
+		int i = 0, j = 1;
+		std::vector<float> filtered_data;
+		while(j < size - 1){
+			float a = snapped_curve_no_dupl[i];
+			float b = snapped_curve_no_dupl[j];
+			float c = snapped_curve_no_dupl[j+1];
+			float min = (a < c) ? a : c;
+			float max = (a < c) ? c : a;
+
+			if (! ( min <= b && b <= max) ){
+				filtered_data.push_back(a);
+				i = j;
+			}
+			j += 1;
+		}
+
+		// Special handling in case the vector has dimension 1
+		if (j == size -1){
+			filtered_data.push_back(snapped_curve_no_dupl[j]);
+		}
+		else {
+			filtered_data.push_back(snapped_curve_no_dupl[0]);
+		}
+
+		return filtered_data;
+
+}
+
 void Object::pad(std::vector <float> & grid_curve) const
 {
 	// finally check if dimension of snapped grid object diminished, and apply padding if necessary
 	// with special big padding number
 	unsigned long int M = 1000000;  /// further testing required
-	for (int i = (int) grid_curve.size(); i < this->get_dim(); ++i)
+
+	int size = 0;
+
+	//If the algorithm is continuous frechet, then size = this-.get_dim()
+	// is not reliable because all curves are filtered and thus will have different
+	// complexity. d is a global variable which tells which is the original complexity of the curves
+	if (algorithm == "Frechet" && metric_func == "continuous"){
+		size = d;
+	}
+	else{
+		size = this->get_dim();
+	}
+
+	for (int i = (int) grid_curve.size(); i < size; ++i)
 		grid_curve.push_back(M);
 }
 
-Abstract_Object * Object::to_grid_curve(float t1, float t2) const
+Abstract_Object * Object::to_grid_curve(const std::vector<double>& t) const
 {
 	// first of all the function snaps the caller Object-time series to grid, without multiplying by delta or shifting by t
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <int> snapped_object = this->snap(t1);
+	std::vector <int> snapped_object = this->snap(t);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
-	std::vector <float> grid_curve = this->remove_dupls(snapped_object);
+	std::vector <int> grid_curve_temp = this->remove_dupls(snapped_object);
+
+	std::vector <float> grid_curve = this->get_extrema(grid_curve_temp);
+
 
 	// multiply by delta and shift by t to get final grid curve
 	for (int i = 0; i < (int) grid_curve.size(); ++i)
-		grid_curve[i] = grid_curve[i] * delta + t1;
-	
+		grid_curve[i] = grid_curve[i] * delta + t[0];
 	// do padding necessary
 	this->pad(grid_curve);
 
@@ -408,7 +475,7 @@ double time_series::euclidean_distance(const Abstract_Object& abstract_object) c
 	// for time_series euclidean_distance is not supported
 	std::cerr << "Warning : time_series::euclidean_distance : Caller object is of type time_series (undefined behavior)\n\n";
 	// return garbage value
-	return 0.0;
+	return -1.0;
 }
 
 double time_series::discrete_frechet_distance(const Abstract_Object & abstract_object) const
@@ -455,15 +522,15 @@ const Object * time_series::to_Object() const
 	return new Object(flattened_time_series);
 }
 
-std::vector <std::pair <int, int> > time_series::snap(float t1, float t2) const
+std::vector <std::pair <int, int> > time_series::snap(const std::vector<double>& t) const
 {
 	std::vector <std::pair <int, int> > snapped_time_series;
 
 	for (int i = 0; i < this->get_complexity(); ++i)
 	{
 		// snap each point to new integer point coordinate of grid
-		int x_value = floor((std::get<0>(this->data_vector[i]) - t1) / delta + 1/2);
-		int y_value = floor((std::get<1>(this->data_vector[i]) - t2) / delta + 1/2);
+		int x_value = floor((std::get<0>(this->data_vector[i]) - t[0]) / delta + 1/2);
+		int y_value = floor((std::get<1>(this->data_vector[i]) - t[1]) / delta + 1/2);
 		snapped_time_series.push_back(std::make_pair(x_value, y_value));
 	}
 
@@ -513,13 +580,13 @@ void time_series::pad(std::vector <std::pair <float, float> > & grid_curve) cons
 }
 
 
-Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
+Abstract_Object * time_series::to_grid_curve(const std::vector<double> & t) const
 {
 	// first of all the function snaps the given time series to grid, without multiplying by delta or shifting by t
 	// we do this so that we can remove duplicate points from snapping by comparing integers (otherwise we would compare floats , oof)
 	
 	// vector holds snapped points-coordinates
-	std::vector <std::pair <int, int> > snapped_time_series = this->snap(t1, t2);
+	std::vector <std::pair <int, int> > snapped_time_series = this->snap(t);
 
 	// vector of grid curve coordinates after removing duplicates from snapping
 	std::vector <std::pair <float, float> > grid_curve = this->remove_dupls(snapped_time_series);
@@ -527,8 +594,8 @@ Abstract_Object * time_series::to_grid_curve(float t1, float t2) const
 	// multiply by delta and shift by t to get final grid curve
 	for (int i = 0; i < (int) grid_curve.size(); ++i)
 	{
-		grid_curve[i].first = grid_curve[i].first * delta + t1;
-		grid_curve[i].second = grid_curve[i].second * delta + t2;
+		grid_curve[i].first = grid_curve[i].first * delta + t[0];
+		grid_curve[i].second = grid_curve[i].second * delta + t[1];
 	}
 	
 	// do padding necessary

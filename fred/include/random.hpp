@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <random>
 #include <algorithm>
-
+#include <cassert>
 #include "types.hpp"
 
 namespace Random {
@@ -24,7 +24,7 @@ class Uniform_Random_Generator {
     T lbound, ubound;
     
 public:
-    Uniform_Random_Generator(const T lbound = 0, const T ubound = 1) : lbound{lbound}, ubound{ubound}, mersenne_twister{std::random_device{}()}, distribution{lbound, ubound} {}
+    Uniform_Random_Generator(const T lbound = 0, const T ubound = 1) : mersenne_twister{std::random_device{}()}, distribution{lbound, ubound}, lbound{lbound}, ubound{ubound} {}
     
     inline T get() {
         return distribution(mersenne_twister);
