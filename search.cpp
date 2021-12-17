@@ -89,20 +89,20 @@ int main(int argc, char const *argv[])
 	// depending on algorithm used, method pointer will point to necessary structure
 	if (algorithm == "LSH")
 	{
-		w = 5;									// experimental value (testing required)
+		w = 40;									// experimental value (testing required)
 		numBuckets = floor(n/16);				// experimental value (testing required)
 		method = new lsh_struct(numBuckets);	// vector-curve lsh to be used, so create entire structure for lsh algorithm
 		metric_function = euclidean;			// metric used is euclidean distance
 	}
 	else if (algorithm == "Hypercube")
 	{
-		w = 20;							// experimental value (testing required)
+		w = 50;							// experimental value (testing required)
 		method = new hypercube;			// vector-curve hypercube to be used, so create entire structure for hypercube algorithm
 		metric_function = euclidean;	// metric used is euclidean distance	
 	}
 	else if (algorithm == "Frechet")
 	{
-		w = 5;									// experimental value (testing required)
+		w = 40;									// experimental value (testing required)
 		numBuckets = floor(n/16);				// experimental value (testing required)
 		method = new lsh_struct(numBuckets);	// frechet-curve lsh to be used, so create entire structure for lsh algorithm
 
@@ -111,12 +111,12 @@ int main(int argc, char const *argv[])
 			if (metric_func == "discrete")
 			{
 				// delta << 4 * dim of grid * min {m1, m2} ,  dim of grid = 2, m1=m2=d for our case
-				delta = (8 * d) * 0.0003;					// experimental value (testing required)
+				delta = (8 * d) * 0.00023;					// experimental value (testing required)
 			}
 			else // metric continuous
 			{
 				// delta << 4 * dim of grid * min {m1, m2} ,  dim of grid = 1, m1=m2=d for our case
-				delta = (4 * d) * 0.0003;					// experimental value (testing required)	
+				delta = (4 * d) * 0.00023;					// experimental value (testing required)	
 			}
 		}
 

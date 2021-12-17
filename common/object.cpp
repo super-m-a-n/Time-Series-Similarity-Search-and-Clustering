@@ -9,6 +9,7 @@
 #include <vector>
 #include <utility>
 #include <typeinfo>
+#include <list>
 
 
 /////////////////////////////// CLASS OBJECT ///////////////////////////////////////////
@@ -73,20 +74,35 @@ int Object::get_dim() const
 
 ///////////////////////// SETTERS /////////////////////////////////////////////
 
-void Object::set(const Object& p)
+void Object::set(const Abstract_Object & abstract_object)
 {
+	// downcast abstract object to type Object
+	//try {
+	const Object& p = dynamic_cast<const Object&>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "Object::euclidean_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
 	// copy identifier
 	this->identifier = p.get_name();
 
-	if (this->get_dim() != p.get_dim())		// object dimensions should match
+	/*if (this->get_dim() != p.get_dim())		// object dimensions should match
 	{
 		std::cerr << "Warning : Object::set : dimensions don't match\n\n";
 		return;
 	}
+	*/
+
+	if (this->get_dim() != p.get_dim())
+	{
+		// resize data vector to dimension of Object p
+		(this->data_vector).resize(p.get_dim());
+	}
 
 	// copy coordinates
 	for (int i = 0; i < this->get_dim(); ++i)
-		this->data_vector[i] = p.data_vector[i];
+		this->data_vector[i] = p.data_vector[i];		
 }
 
 
@@ -347,11 +363,38 @@ time_series::time_series(std::vector <float> & input_vector, std::string & curve
 	}
 }
 
+time_series::time_series(std::vector <float> & input_vector)
+{
+	float x_val = 1;
+
+	for (int i = 0; i < (int) input_vector.size(); ++i)
+	{
+		data_vector.push_back(std::make_pair(x_val, input_vector[i]));
+		x_val++;
+	}
+}
+
 time_series::time_series(std::vector <std::pair <float, float> > input_vector)
 {
 	for (int i = 0; i < (int) input_vector.size(); ++i)
 	{
 		data_vector.push_back(input_vector[i]);
+	}
+}
+
+time_series::time_series(const Abstract_Object & abstract_object)
+{
+	// downcast abstract object to type time_series
+	//try {
+	const time_series & P = dynamic_cast<const time_series &>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "time_series::discrete_frechet_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
+	for (int i = 0; i < P.get_complexity(); ++i)
+	{
+		data_vector.push_back(P.data_vector[i]);
 	}
 }
 
@@ -367,6 +410,42 @@ const std::pair <float, float> & time_series::get_ith(int i) const
 	return this->data_vector[i];
 }
 
+///////////////////////// SETTERS /////////////////////////////////////////////
+	
+void time_series::set(const Abstract_Object & abstract_object)
+{
+	// downcast abstract object to type time_series
+	//try {
+	const time_series & P = dynamic_cast<const time_series &>(abstract_object);
+	//} catch (const std::bad_cast& error)
+	//{
+	//	std::cerr << "time_series::discrete_frechet_distance : Bad_Cast error --> " << error.what() << std::endl << std::endl;
+	//}
+
+	// copy identifier
+	this->identifier = P.get_name();
+
+	/*if (this->get_complexity() != P.get_complexity())		// time series complexities should match
+	{
+		std::cerr << "Warning : time_series::set : complexities don't match\n\n";
+		return;
+	}*/
+
+	if (this->get_complexity() != P.get_complexity())
+	{
+		// resize data vector to complexity of time series P
+		(this->data_vector).resize(P.get_complexity());
+	}
+
+	// copy points
+	for (int i = 0; i < this->get_complexity(); ++i)
+	{
+		(this->data_vector[i]).first = (P.data_vector[i]).first;
+		(this->data_vector[i]).second = (P.data_vector[i]).second;
+	}
+
+}
+
 
 ////////////////////////  PRINTS ///////////////////////////////////////////////
 void time_series::print() const
@@ -376,6 +455,17 @@ void time_series::print() const
 		std::cout << "(" << std::get<0>(this->data_vector[i]) << ", " << std::get<1>(this->data_vector[i]) << ") , ";
 
 	std::cout << "(" << std::get<0>(this->data_vector[this->get_complexity()-1]) << ", " << std::get<1>(this->data_vector[this->get_complexity()-1]) << ") ) \n\n";
+}
+
+void time_series::print_coordinates(std::ofstream & file) const
+{
+	file << "( ";
+	for (int i = 0; i < this->get_complexity() - 1; ++i)
+		file << "(" << std::get<0>(this->data_vector[i]) << ", " << std::get<1>(this->data_vector[i]) << ") , ";
+
+	file << "(" << std::get<0>(this->data_vector[this->get_complexity()-1]) << ", " << std::get<1>(this->data_vector[this->get_complexity()-1]) << ")";
+	file << " )";
+
 }
 
 /////////////////////// OBJECT OPERATIONS ///////////////////////////////////////////
@@ -390,7 +480,7 @@ double time_series::euclidean_distance(const Abstract_Object& abstract_object) c
 
 double time_series::discrete_frechet_distance(const Abstract_Object & abstract_object) const
 {
-	//time_series & P;
+	
 	// downcast abstract object to type time_series
 	//try {
 	const time_series & P = dynamic_cast<const time_series &>(abstract_object);
@@ -515,6 +605,72 @@ Abstract_Object * time_series::to_grid_curve(const std::vector<double> & t) cons
 	return new time_series(grid_curve);
 }
 
+//A general way to compute the argmin of 3 numbers
+template<typename T>
+int argmin(T x, T y, T z){
+	T min = x;
+	int pos = 1;
+	if (y < min) { min = y; pos = 2;}
+	if (z < min) { min = z; pos = 3;}
+	return pos;
+}
+
+Abstract_Object * time_series::mean_curve(const time_series * P) const
+{
+	// a vector of vectors that will serve as the 2D array for dynamic programming
+	std::vector <std::vector <double> > OPT(this->get_complexity(), std::vector <double> (P->get_complexity()));
+	// initialize first square at (0,0)
+	OPT[0][0] = norm(this->get_ith(0), P->get_ith(0));
+	// initialize first column of array
+	for (int i = 1; i < this->get_complexity(); i++)
+		OPT[i][0] = std::max(OPT[i-1][0], norm(this->get_ith(i), P->get_ith(0)));
+	// initialize first row of array
+	for (int j = 1; j < P->get_complexity(); j++)
+		OPT[0][j] = std::max(OPT[0][j-1], norm(this->get_ith(0), P->get_ith(j)));
+
+	// initialize rest of array (i > 0 and j > 0)
+	for (int i = 1; i < this->get_complexity(); i++)
+		for (int j = 1; j < P->get_complexity(); j++)
+			OPT[i][j] = std::max(std::min(OPT[i-1][j], std::min(OPT[i-1][j-1], OPT[i][j-1])), norm(this->get_ith(i), P->get_ith(j)));
+
+
+	std::list <std::pair <int, int> > best_traversal;
+	
+	// backtrack on OPT array to compute the best traversal
+	int i = this->get_complexity() - 1;
+	int j = P->get_complexity() - 1;
+
+	// last point of each curve is definitely part (endpoint actually) of best traversal
+	best_traversal.push_front(std::make_pair(i, j));
+
+	// while we have not reached starting point for both curves
+	while(i != 0 && j != 0)
+	{
+		int min_index = argmin(OPT[i-1][j], OPT[i][j-1], OPT[i-1][j-1]);
+		if (min_index == 0)
+			best_traversal.push_front(std::make_pair(--i, j));
+		else if (min_index == 1)
+			best_traversal.push_front(std::make_pair(i, --j));
+		else
+			best_traversal.push_front(std::make_pair(--i, --j));
+	}
+
+	// compute the mean curve from best traversal
+	std::vector <std::pair <float, float> > mean_curve;
+
+	for (auto const& index_pair : best_traversal)
+	{
+		const std::pair <float, float> & caller_curve_point = this->get_ith(std::get<0>(index_pair));
+		const std::pair <float, float> & argument_curve_point = P->get_ith(std::get<1>(index_pair));
+
+		float x_value = (std::get<0>(caller_curve_point) + std::get<0>(argument_curve_point)) / 2; 
+		float y_value = (std::get<1>(caller_curve_point) + std::get<1>(argument_curve_point)) / 2;
+		mean_curve.push_back(std::make_pair(x_value, y_value));
+	}
+
+	return new time_series(mean_curve);
+}
+
 // metric wrappers
 
 double discrete_frechet(const Abstract_Object & P, const Abstract_Object & Q)
@@ -534,4 +690,17 @@ double norm(const std::pair <float, float> & point1, const std::pair <float, flo
 	double y1 = (double) std::get<1>(point1);
 	double y2 = (double) std::get<1>(point2);
 	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+// mean curve wrapper
+Abstract_Object * mean_curve(const Abstract_Object * abstract_object1, const Abstract_Object * abstract_object2)
+{
+	if (abstract_object2 == nullptr)
+		return new time_series(*abstract_object1);
+
+	// downcast abstract objects to type time_series
+	const time_series * P = dynamic_cast<const time_series *>(abstract_object1);
+	const time_series * Q = dynamic_cast<const time_series *>(abstract_object2);
+
+	return P->mean_curve(Q);
 }
