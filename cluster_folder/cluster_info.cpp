@@ -692,7 +692,7 @@ void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, cons
 bool Cluster_info::update(const std::string & update_method, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
 	double e_euclid = 1;			// testing required
-	double e_frechet = 40;			// testing required
+	double e_frechet = 10;			// testing required
 	double avg_deviation = 0.0;
 
 	// for each cluster

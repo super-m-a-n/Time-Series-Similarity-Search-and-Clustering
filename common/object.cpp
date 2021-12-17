@@ -10,6 +10,7 @@
 #include <utility>
 #include <typeinfo>
 #include <list>
+#include <stdlib.h>     /* srand, rand */
 
 
 /////////////////////////////// CLASS OBJECT ///////////////////////////////////////////
@@ -609,9 +610,9 @@ Abstract_Object * time_series::to_grid_curve(const std::vector<double> & t) cons
 template<typename T>
 int argmin(T x, T y, T z){
 	T min = x;
-	int pos = 1;
-	if (y < min) { min = y; pos = 2;}
-	if (z < min) { min = z; pos = 3;}
+	int pos = 0;
+	if (y < min) { min = y; pos = 1;}
+	if (z < min) { min = z; pos = 2;}
 	return pos;
 }
 
@@ -643,7 +644,7 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 	// last point of each curve is definitely part (endpoint actually) of best traversal
 	best_traversal.push_front(std::make_pair(i, j));
 
-	// while we have not reached starting point for both curves
+	// while we have not reached starting point for either curves
 	while(i != 0 && j != 0)
 	{
 		int min_index = argmin(OPT[i-1][j], OPT[i][j-1], OPT[i-1][j-1]);
@@ -653,6 +654,25 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 			best_traversal.push_front(std::make_pair(i, --j));
 		else
 			best_traversal.push_front(std::make_pair(--i, --j));
+	}
+
+	// complete traversal by adding pair of points until we reach starting point for both curves
+	if (i == 0 && j != 0)	// if we have reached starting point for first curve but not for second curve
+	{
+		while(j != 0)
+		{
+			// complete traversal by adding points of second curve
+			best_traversal.push_front(std::make_pair(i, --j));
+		}
+	}
+	else if (j == 0 && i != 0)	// else if we have reached starting point for second curve but not for first curve
+	{
+		while(i != 0)
+		{
+			// complete traversal by adding points of first curve
+			best_traversal.push_front(std::make_pair(--i, j));
+		}
+
 	}
 
 	// compute the mean curve from best traversal
@@ -667,6 +687,23 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 		float y_value = (std::get<1>(caller_curve_point) + std::get<1>(argument_curve_point)) / 2;
 		mean_curve.push_back(std::make_pair(x_value, y_value));
 	}
+
+	// filter mean_curve points, to decrease its complexity
+	int extra_points = mean_curve.size() - this->get_complexity();
+	// for each excessive point of mean curve
+	for (int i = 0; i < extra_points; ++i)
+	{
+		// pick a random non-last point index of mean-curve
+		int index = rand() % (mean_curve.size()-1);
+		// find mean point of point at index, index+1
+		float x_value = (std::get<0>(mean_curve[index]) + std::get<0>(mean_curve[index+1])) / 2;
+		float y_value = (std::get<1>(mean_curve[index]) + std::get<1>(mean_curve[index+1])) / 2;
+		// replace the 2 consecutive points with the mean point, reducing mean curves complexity by one
+		mean_curve.erase(mean_curve.begin()+index+1);
+		mean_curve[index].first = x_value;
+		mean_curve[index].second = y_value;
+	}
+
 
 	return new time_series(mean_curve);
 }
