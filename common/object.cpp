@@ -10,6 +10,7 @@
 #include <utility>
 #include <typeinfo>
 #include <list>
+#include <stdlib.h>     /* srand, rand */
 
 
 /////////////////////////////// CLASS OBJECT ///////////////////////////////////////////
@@ -686,6 +687,23 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 		float y_value = (std::get<1>(caller_curve_point) + std::get<1>(argument_curve_point)) / 2;
 		mean_curve.push_back(std::make_pair(x_value, y_value));
 	}
+
+	// filter mean_curve points, to decrease its complexity
+	int extra_points = mean_curve.size() - this->get_complexity();
+	// for each excessive point of mean curve
+	for (int i = 0; i < extra_points; ++i)
+	{
+		// pick a random non-last point index of mean-curve
+		int index = rand() % (mean_curve.size()-1);
+		// find mean point of point at index, index+1
+		float x_value = (std::get<0>(mean_curve[index]) + std::get<0>(mean_curve[index+1])) / 2;
+		float y_value = (std::get<1>(mean_curve[index]) + std::get<1>(mean_curve[index+1])) / 2;
+		// replace the 2 consecutive points with the mean point, reducing mean curves complexity by one
+		mean_curve.erase(mean_curve.begin()+index+1);
+		mean_curve[index].first = x_value;
+		mean_curve[index].second = y_value;
+	}
+
 
 	return new time_series(mean_curve);
 }
