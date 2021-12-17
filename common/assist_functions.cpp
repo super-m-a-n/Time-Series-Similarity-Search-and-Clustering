@@ -1,3 +1,4 @@
+// file : assist_functions.cpp
 #include <iostream>
 #include "assist_functions.hpp"
 #include "params.hpp"
@@ -47,3 +48,14 @@ std::vector<float> filter_input_curve(std::vector<float> input_data){
 	}
 	
 }
+
+//returns largest power of 2 smaller than given number
+unsigned int largest_power_of_2_smaller_than(unsigned int n)
+{
+	// returns the number with the leftmost set bit of number set, and the rest all unset
+	n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    return n ^ (n >> 1);

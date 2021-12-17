@@ -1,35 +1,41 @@
 CXX=g++
 CXXFLAGS =-Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -std=c++14
-CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder -I./fred/include -I./fred/src #-I./cluster_folder
+CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder -I./fred/include -I./fred/src -I./cluster_folder
 OBJS_FOLDER = ./objects 
 OBJ_COMMON =  ./common/object.o ./common/assist_functions.o ./common/h_hash.o ./common/dataset.o ./common/input_check.o
 OBJ_LSH = ./lsh_folder/g_hash.o ./lsh_folder/h_grid.o ./lsh_folder/hash.o ./lsh_folder/lsh_struct.o
 OBJ_HYPERCUBE = ./hypercube_folder/f_hash.o ./hypercube_folder/hypercube_class.o
 OBJ_FRED = ./fred/src/clustering.o ./fred/src/config.o ./fred/src/curve.o ./fred/src/dynamic_time_warping.o ./fred/src/frechet.o ./fred/src/fred_python_wrapper.o
 OBJ_FRED += ./fred/src/interval.o ./fred/src/jl_transform.o ./fred/src/point.o ./fred/src/simplification.o
-#OBJ_CLUSTER = ./cluster_folder/cluster_info.o 
-PROGRAMS = search
+OBJ_CLUSTER = ./cluster_folder/cbtree.o ./cluster_folder/cluster_info.o
+PROGRAMS = search cluster
 
 all: $(PROGRAMS) mv_objs
 
 target1: search
 
+target2: cluster
+
 mv_objs:
 	mkdir -p $(OBJS_FOLDER)
-	#mv -f $(OBJ_CLUSTER) $(OBJS_FOLDER) 2>/dev/null; true
+	mv -f $(OBJ_CLUSTER) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_HYPERCUBE) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_LSH) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_COMMON) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f $(OBJ_FRED) $(OBJS_FOLDER) 2>/dev/null; true
 	mv -f search.o $(OBJS_FOLDER) 2>/dev/null; true
+	mv -f cluster.o $(OBJS_FOLDER) 2>/dev/null; true
 
 search: $(OBJ_FRED) $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) search.o 
 	$(CXX) $(CXXFLAGS) -o search search.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_FRED)
 
+cluster: $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER) cluster.o 
+	$(CXX) $(CXXFLAGS) -o cluster cluster.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER)
+
 .PHONY: clean
 
 clean:
-	rm -rf *.o search output* $(OBJS_FOLDER)
+	rm -rf *.o search cluster output* $(OBJS_FOLDER)
 
 
 ###############################################################################################################

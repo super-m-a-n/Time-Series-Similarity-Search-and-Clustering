@@ -488,3 +488,104 @@ bool check_init_args(int argc, const char ** argv, std::string & input_file, std
 	return true;
 }
 
+// checks for correct input args from terminal and initializes program parameters if so (for clustering)
+bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & config_file, std::string & output_file, std::string & update_method, std::string & assignment_method, bool& complete, bool& silhouette)
+{
+	// all cmd parameters here are mandatory (for clustering), except for -complete and -silhouette
+	if (argc != 12 && argc != 13 && argc != 14)
+	{
+		std::cerr << "\nWrong command line input. Use : ./cluster -i <input_file> -c <config_file> -o <output_file> -update <update_method> -assignment <assignment_method> -complete <optional> -silhouette <optional>\n";
+		std::cerr << "-complete is optional, -silhouette is optional, <update_method> is Mean Frechet or Mean Vector, <assignment_method> is Classic or LSH or Hypercube or LSH_Frechet\n\n";
+		return false;
+	}
+
+	if (strcmp(argv[1], "-i") != 0 || strcmp(argv[3], "-c") != 0 || strcmp(argv[5], "-o") != 0 || strcmp(argv[7], "-update") != 0 || strcmp(argv[10], "-assignment") != 0 )
+	{
+		std::cerr << "\nError: one or more wrong input parameters" << std::endl << "Use : -i -c -o -update -assignment -complete <optional> -silhouette <optional>\n\n";
+		return false;
+	}
+
+	// initialize files
+	input_file = argv[2];
+	config_file = argv[4];
+	output_file = argv[6];
+
+	// check if <update_method> is either Mean Frechet or Mean Vector
+	if (strcmp(argv[8], "Mean") != 0 || (strcmp(argv[9], "Vector") != 0 && strcmp(argv[9], "Frechet") != 0))
+	{
+		std::cerr << "\nError: invalid input parameter <update_method>" << std::endl << "Use : <update_method> --> Mean Frechet or Mean Vector\n\n";
+		return false;
+	}
+
+	// initialize update_method
+	update_method = argv[8];
+	std::string str = argv[9];
+	update_method += " ";
+	update_method += str;
+
+	// check if <assignment_method> is either Classic or LSH or Hypercube or LSH_Frechet
+	if (strcmp(argv[11], "Classic") != 0 && strcmp(argv[11], "LSH") != 0 && strcmp(argv[11], "Hypercube") != 0 && strcmp(argv[11], "LSH_Frechet") != 0)
+	{
+		std::cerr << "\nError: invalid input parameter <assignment_method>" << std::endl << "Use : <assignment_method> --> Classic or LSH or Hypercube or LSH_Frechet\n\n";
+		return false;
+	}
+
+	// initialize assignment_method
+	assignment_method = argv[11];
+
+	// check if pair of update_method and assignment_method is valid
+	if (update_method == "Mean Vector"  &&  assignment_method == "LSH_Frechet")
+	{
+		std::cerr << "\nMean Vector <update_method> is not compatible with LSH_Frechet <assignment_method>\n";
+		std::cerr << "Use : <assignment_method> --> Classic or LSH or Hypercube  , when <update_method> = Mean Vector\n\n";
+		return false;
+	}
+
+	if (update_method == "Mean Frechet"  &&  (assignment_method == "LSH" || assignment_method == "Hypercube"))
+	{
+		std::cerr << "Mean Frechet <update_method> is not compatible with " << assignment_method << " <assignment_method>\n";
+		std::cerr << "Use : <assignment_method> --> Classic or LSH_Frechet  , when <update_method> = Mean Frechet\n\n";
+		return false;
+	}
+
+	// check if -complete or -silhouette were given
+	if (argc == 12)
+	{
+		complete = false;
+		silhouette = false;
+	}
+	else if (argc == 13)
+	{
+		if (!strcmp(argv[12], "-complete"))
+		{
+			complete = true;
+			silhouette = false;
+		}
+		else if (!strcmp(argv[12], "-silhouette"))
+		{
+			complete = false;
+			silhouette = true;
+		}
+		else
+		{
+			std::cerr << "\nError: Expected -complete or -silhouette" << std::endl << "Use : -i -c -o -update -assignment -complete <optional> -silhouette <optional>\n\n";
+			return false;
+		}
+	}
+	else if (argc == 14)
+	{
+		if (strcmp(argv[12], "-complete") != 0 || strcmp(argv[13], "-silhouette") != 0)
+		{
+			std::cerr << "\nError: Expected -complete and then -silhouette" << std::endl << "Use : -i -c -o -update -assignment -complete <optional> -silhouette <optional>\n\n";
+			return false;
+		}
+
+		complete = true;
+		silhouette = true;
+	}
+	else
+		return false;
+
+	return true;
+}
+
