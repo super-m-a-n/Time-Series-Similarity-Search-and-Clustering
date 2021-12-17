@@ -31,6 +31,12 @@ public:
 	// print object
 	virtual void print() const = 0;
 
+	// print object coordinates to file
+	virtual void print_coordinates(std::ofstream & file) const = 0;
+
+	// sets caller object's info to given arg object's info (does a copy basically)
+	virtual void set(const Abstract_Object & abstract_object) = 0;
+
 	// virtual destructor, to call destructor of sub-classes
 	virtual ~Abstract_Object() {}
 	
@@ -81,7 +87,7 @@ public:
 	///////////////////////// SETTERS /////////////////////////////////////////////
 	
 	// sets caller object's info to given arg object's info (does a copy basically)
-	void set(const Object& p);
+	void set(const Abstract_Object & abstract_object);
 	// sets ith coordinate of Object to value
 	void set_ith(int i, float value);
 
@@ -129,8 +135,12 @@ public:
 
 	// constructor through another d-dimensional input array with just y-values
 	time_series(std::vector <float> & input_vector, std::string & curve_name);
+	// constructor through another d-dimensional input array with empty object name
+	time_series(std::vector <float> & input_vector);
 	// constructor through another input vector with pairs of x-values and y-values
 	time_series(std::vector <std::pair <float, float> > input_vector);
+	// copy constructor through another Abstract object (of type time series)
+	time_series(const Abstract_Object & abstract_object);
 	
 	///////////////////////// GETTERS /////////////////////////////////////////////
 	
@@ -139,11 +149,18 @@ public:
 	// gets ith 2d point of time series
 	const std::pair <float, float> & get_ith(int i) const;
 
+	///////////////////////// SETTERS /////////////////////////////////////////////
+	
+	// sets caller time_series's info to given arg time_series's info (does a copy basically)
+	void set(const Abstract_Object & abstract_object);
+
 
 	////////////////////////  PRINTS ///////////////////////////////////////////////
 	
 	// print method
 	void print() const;
+	// print time series points to file
+	void print_coordinates(std::ofstream & file) const;
 
 	/////////////////////// TIME_SERIES OPERATIONS ///////////////////////////////////////////
 
@@ -159,6 +176,9 @@ public:
 	// pads given vector of grid points if necessary
 	void pad(std::vector <std::pair <float, float> > & grid_curve) const;
 	Abstract_Object * to_grid_curve(float t1, float t2) const;
+	// calculates optimal traversal through backtracking from discrete frechet dp array
+	// then uses the optimal traversal to return the mean curve of caller and argument time series
+	Abstract_Object * mean_curve(const time_series * P) const;
 };
 
 
@@ -166,5 +186,8 @@ public:
 double euclidean(const Abstract_Object & p, const Abstract_Object & q);
 double discrete_frechet(const Abstract_Object & P, const Abstract_Object & Q);
 double norm(const std::pair <float, float> & point1, const std::pair <float, float> & point2);
+
+// mean curve wrapper
+Abstract_Object * mean_curve(const Abstract_Object * abstract_object1, const Abstract_Object * abstract_object2);
 
 #endif

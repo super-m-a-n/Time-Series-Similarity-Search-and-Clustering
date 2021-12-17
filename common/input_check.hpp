@@ -33,4 +33,7 @@ bool read_input_file(std::string & input_file, int & n, int & d);
 bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & query_file, int & k, int & d1, int & L, int & M, int & probes, 
 	std::string & output_file, std::string & algorithm, std::string & metric, double & delta);
 
+// checks for correct input args from terminal and initializes program parameters if so (for clustering)
+bool check_init_args(int argc, const char ** argv, std::string & input_file, std::string & config_file, std::string & output_file, std::string & update_method, std::string & assignment_method, bool& complete, bool& silhouette);
+
 #endif

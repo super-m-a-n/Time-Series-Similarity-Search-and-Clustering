@@ -72,6 +72,11 @@ Dataset::Dataset(int num_of_Points, std::string & input_file) : num_of_Objects(n
 		    {
 		    	dataset[point_index] = new Object(input_data, object_name);		 // create Abstract Object of type Object (flattened time_series)
 		    }
+		    else
+		    {
+		    	dataset[point_index] = new Object(input_data, object_name);		 // default : create Abstract Object of type Object
+		    }
+
 
 		}
 
