@@ -282,6 +282,7 @@ std::vector <std::pair <double, const Abstract_Object*> > lsh_struct::exact_near
 				dist = (Frechet::Continuous::distance(*(curve_vect[i]), *fred_curve)).value;
 			}
 			else{
+				std::cerr << " A fred curve has complexity 1" << std::endl; 
 				dist = (*metric)(query_object, dataset.get_ith_object(i));
 			}
 		}

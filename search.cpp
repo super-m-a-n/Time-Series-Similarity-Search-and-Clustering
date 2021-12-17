@@ -20,7 +20,7 @@
 int N = 1, R, d = 0, w, n = 0;		// global
 int k, L;							// vector lsh
 int d1, probes, M;					// vector hypercube
-double delta, epsilon = 0.00001;		// curve lsh (frechet)
+double delta, epsilon = 0.01;		// curve lsh (frechet)
 std::string algorithm, metric_func;	// variable for algorithm , metric used for frechet
 
 int main(int argc, char const *argv[])

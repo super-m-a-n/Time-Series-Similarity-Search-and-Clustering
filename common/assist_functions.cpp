@@ -21,8 +21,8 @@ std::vector<float> filter_input_curve(std::vector<float> input_data){
         int i = 0, j = 1;
 		std::vector<float> filtered_data;
 		while(j < size - 1){
-			float a = abs(input_data[j] - input_data[i]);
-			float b = abs(input_data[j+1] - input_data[j]);
+			float a = std::abs(input_data[j] - input_data[i]);
+			float b = std::abs(input_data[j+1] - input_data[j]);
 			float max = (a<b)?b:a;
 			if (max >= epsilon){
 				filtered_data.push_back(input_data[i]);
@@ -33,6 +33,7 @@ std::vector<float> filter_input_curve(std::vector<float> input_data){
 
 		// Special handling in case the vector has dimension 1
 		if (j == size -1){
+            filtered_data.push_back(input_data[i]);
 			filtered_data.push_back(input_data[j]);
 		}
 		else {
