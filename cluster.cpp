@@ -7,10 +7,10 @@
 #include "cluster_info.hpp"
 
 // global program parameters
-int k, L, d = 0, d1, w, n = 0, probes, M, K;
+int k, L, d = 0, d1, w, n = 0, probes, M, K, R, N=1;
 // variable for algorithm , metric used for frechet
 std::string algorithm, metric_func;
-double delta;				    	// curve lsh (frechet)
+double delta, epsilon = 0.01;				    	// curve lsh (frechet)
 
 int main(int argc, char const *argv[])
 {

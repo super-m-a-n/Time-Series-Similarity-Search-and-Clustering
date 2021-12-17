@@ -29,13 +29,17 @@ mv_objs:
 search: $(OBJ_FRED) $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) search.o 
 	$(CXX) $(CXXFLAGS) -o search search.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_FRED)
 
-cluster: $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER) cluster.o 
-	$(CXX) $(CXXFLAGS) -o cluster cluster.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER)
+cluster: $(OBJ_FRED) $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER) cluster.o 
+	$(CXX) $(CXXFLAGS) -o cluster cluster.o $(OBJ_COMMON) $(OBJ_HYPERCUBE) $(OBJ_LSH) $(OBJ_CLUSTER) $(OBJ_FRED)
 
 .PHONY: clean
 
 clean:
 	rm -rf *.o search cluster output* $(OBJS_FOLDER)
+
+search_test: target1
+	./search -i ./data/nasd_input.csv -q ./data/nasd_query.csv -algorithm Frechet -metric continuous
+
 
 
 ###############################################################################################################

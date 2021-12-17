@@ -331,11 +331,11 @@ T max(T x, T y){
 
 // clustering using lsh range search as assignment method
 void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, const std::string & update_method, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
-	/*bool converged = false;
+	bool converged = false;
 
 	//No need for something complicated, just calculate the distances and make the necessary update, exact_lloyds does that
 	if (K == 1){
-		this->exact_lloyds(dataset, metric);
+		this->exact_lloyds(dataset, update_method, metric);
 		return;
 	}
 
@@ -445,17 +445,17 @@ void Cluster_info::lsh_range_search_clustering(const Dataset & dataset, const st
 
 		// update centroids and update converged value
 		converged = this->update(update_method, metric);	
-	}*/
+	}
 
 }
 
 // clustering using hypercube range search as assignment method
 void Cluster_info::cube_range_search_clustering(const Dataset & dataset, const std::string & update_method, double (*metric)(const Abstract_Object &, const Abstract_Object &)){
-	/*bool converged = false;
+	bool converged = false;
 
 	//No need for something complicated, just calculate the distances and make the necessary update, exact_lloyds does that
 	if (K == 1){
-		this->exact_lloyds(dataset, metric);
+		this->exact_lloyds(dataset, update_method, metric);
 		return;
 	}
 
@@ -565,13 +565,127 @@ void Cluster_info::cube_range_search_clustering(const Dataset & dataset, const s
 
 		// update centroids and update converged value
 		converged = this->update(update_method, metric);	
-	}*/
+	}
 }
 
 // clustering using frechet range search as assignment method
 void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, const std::string & update_method, double (*metric)(const Abstract_Object &, const Abstract_Object &))
 {
-	// TODO
+	bool converged = false;
+
+	//No need for something complicated, just calculate the distances and make the necessary update, exact_lloyds does that
+	if (K == 1){
+		this->exact_lloyds(dataset, update_method, metric);
+		return;
+	}
+
+	int num_of_Objects = dataset.get_num_of_Objects();
+
+	lsh_struct lsh_frechet (floor((double) num_of_Objects/16));
+
+	lsh_frechet.import_data(dataset);
+
+	
+
+	while (!converged)
+	{
+		// initialize a map which will contain all the points (their id is the key) aready visited and their closest centroid and the distance from that centroid
+		std::map <std::string, std::pair<double,int>> map;
+		std::map<std::string, std::pair<double, int>>::iterator it;
+
+		// clear previous clusters
+		for (int i = 0; i < K; ++i){
+			(this->clusters[i]).clear();
+		}
+		//Initialise R
+		int R = this->centroids[K-2]->euclidean_distance(*(this->centroids[K-1]));
+		for (int i = 0 ; i < K ; i++){
+			for (int j = i+1 ; j < K ; j++){
+				R = min(R, (int) this->centroids[i]->euclidean_distance(*(this->centroids[j])));
+			}
+		}
+		R /= 2;
+
+		int R2 = 0;
+
+		while(1){
+
+			//Used to check whether any centroid added a point to its cluster
+			//If the flag does not become true, it means that no new points are added so add the rest via Lloyd's method
+			bool flag = false;
+
+			//For each centroid use range search 
+			for (int i = 0 ; i < K ; i++){
+
+				//Execute range search and for each item in the set check if it is already in the map (if so, check which centroid is currently the closest)
+				// otherwise it has been found just now so add it to the map and do flag = true
+				for (auto item : lsh_frechet.range_search(*(this->centroids[i]), R, metric, R2)){
+					double dist = std::get<0>(item);
+					const Abstract_Object* obj_p = std::get<1>(item);
+					std::string id = obj_p->get_name();
+					it = map.find(id);
+
+					//If the item has not been inserted yet then add it
+					// It also means that the currently closest centroid is the i-th one
+					// In the other case, it already is in the map but the distance of the object is closest to the i-th centroid so change the information
+					if (it == map.end()){
+						flag = true;
+						map[id] = std::make_pair(dist, i);
+					}
+					else if (std::get<-0>(map[id]) > dist){
+						it->second.first = dist;
+						it->second.second = i;
+					}
+				}
+			}
+
+			if (flag == false) break;
+
+			R2 = R;
+			R *= 2;
+
+		}
+
+		//Find the points which are already not assigned and run the exact_lloyds variant for them
+		// For every other point, since it is already in the map, we know which cluster is closest to it
+		// create new clusters by assigning each object to its exact nearest centroid
+		for (int i = 0; i < num_of_Objects; ++i)
+		{
+			const Abstract_Object * object = & dataset.get_ith_object(i);
+
+			std::string id = object->get_name();
+
+			it = map.find(id);
+			
+			//If the object is already in the map just see which centroid is closest to it
+			if (it != map.end()){
+				this->clusters[it->second.second].push_back(object);
+				continue;
+			}
+
+
+			double min_dist = (*metric)(*object, *centroids[0]);
+			int cluster_index = 0;
+
+			for (int j = 1; j < K; ++j)
+			{
+				double dist = (*metric)(*object, *centroids[j]);
+				if (dist < min_dist)
+				{
+					min_dist = dist;		// update min distance
+					cluster_index = j;		// update cluster index
+				}
+
+			}
+
+			// insert object to cluster of exact nearest centroid
+			(this->clusters[cluster_index]).push_back(object);
+		}
+
+
+		// update centroids and update converged value
+		converged = this->update(update_method, metric);	
+	}
 }
 
 

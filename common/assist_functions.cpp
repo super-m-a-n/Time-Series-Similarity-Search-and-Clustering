@@ -59,3 +59,4 @@ unsigned int largest_power_of_2_smaller_than(unsigned int n)
     n |= n >> 8;
     n |= n >> 16;
     return n ^ (n >> 1);
+}
