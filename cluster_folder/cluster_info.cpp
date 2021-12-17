@@ -793,7 +793,8 @@ std::vector <double> Cluster_info::silhouette(double (*metric)(const Abstract_Ob
 
 				a_i += (*metric)(*obj_p, *(this->clusters[i][k]));
 			}
-			a_i /= cl_size -1;
+			if (cl_size != 1)
+				a_i /= cl_size -1;
 
 			double min_dist = DBL_MAX;
 			int cluster_index = 0;
@@ -816,10 +817,16 @@ std::vector <double> Cluster_info::silhouette(double (*metric)(const Abstract_Ob
 
 				b_i += (*metric)(*obj_p, *(this->clusters[cluster_index][k]));
 			}
+			if (b_cl_size != 0)
+				b_i /= b_cl_size;
 
-			b_i /= b_cl_size -1;
+			double t = max(a_i,b_i);
 
-			double s_i = (b_i -a_i)/max(a_i,b_i);
+			double s_i = 0.0;
+
+			if (t != 0)
+				s_i = (b_i -a_i)/t;
+			
 
 			cl_eval += s_i ;
 
