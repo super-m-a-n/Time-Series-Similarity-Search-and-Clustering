@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
 		metric_func = "discrete";
 		metric_function = discrete_frechet;
 		// delta << 4 * dim of grid * min {m1, m2} ,  dim of grid = 2, m1=m2=d for our case
-		delta = (8 * d) * 0.00023;					// experimental value (testing required)
+		delta = (8 * d) * 0.000205479452054;					// experimental value (testing required)
 	}
 	else
 	{
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[])
 	Dataset dataset(n, input_file);
 	std::cout << "Completed\n";
 
-	w = 20;
+	w = 50;
 
 	// create a cluster object that will hold info necessary for clustering
 	Cluster_info cluster_info;
