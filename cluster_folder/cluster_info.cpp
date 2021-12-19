@@ -694,6 +694,8 @@ bool Cluster_info::update(const std::string & update_method, double (*metric)(co
 	double e_euclid = 1;			// testing required
 	double e_frechet = 10;			// testing required
 	double avg_deviation = 0.0;
+	int max_iters = 12;
+	static int iters = 0;
 
 	// for each cluster
 	for (int i = 0; i < K; ++i)
@@ -715,7 +717,11 @@ bool Cluster_info::update(const std::string & update_method, double (*metric)(co
 		delete(cluster_mean);
 	}
 
+	iters++;
 	std::cout << "Iteration - average deviation --> " << avg_deviation << std::endl;
+
+	if (iters >= max_iters)		// iteration threshold, in case of bouncing around local minima, deviation not becoming small enough
+		return true;
 
 	if (update_method == "Mean Frechet" && avg_deviation < e_frechet)		// if average change across all centroids is adequately small
 		return true;		// algorithm has converged
