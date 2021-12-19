@@ -20,7 +20,7 @@
 Object::Object()
 {
 	float norm_squared = 0.0;
-	int dim;
+	int dim = 0;
 	
 	// different Object size depending on algorithm
 	if (algorithm == "LSH" || algorithm == "Hypercube")

@@ -358,3 +358,51 @@ std::list <std::pair <double, const Abstract_Object*> > lsh_struct::range_search
 
 	return R_list;
 }
+
+
+
+std::list <std::pair <double, const Abstract_Object*> > lsh_struct::range_search_with_set(const Abstract_Object & query_object, const int & R, std::set<std::string> & already_visited , double (*metric)(const Abstract_Object &, const Abstract_Object &))
+{
+
+	std::set<std::string> visited_set;
+
+	//Save all object-points who are within radius R of the query_object
+	std::list<std::pair <double, const Abstract_Object*> > R_list;
+
+	for (int i = 0; i < L; ++i)
+	{
+		uint32_t query_object_id = 0;
+
+		// get bucket index in i-th hash table, for given query object
+		int bucket = (this->lsh_hash_struct[i])->get_bucket_index(query_object, query_object_id);
+
+		// iterate the bucket of hash table that the bucket index indicates
+		for (auto const& object_info : (this->lsh_hash_struct[i])->get_ith_bucket(bucket))
+		{
+			const Abstract_Object * object = std::get<0>(object_info);			// get object
+			
+			if (already_visited.count(object->get_name()) != 0){
+				continue;
+			}
+			else{
+				already_visited.insert(object->get_name());
+			}
+
+			// if current object has not been visited yet
+			if (visited_set.count(object->get_name()) == 0)
+			{
+				// add object's name (unique identifier) into visited set
+				visited_set.insert(object->get_name());
+
+				double dist = (*metric)(query_object, *object);
+				//if it is also within range
+				if (dist < R )
+				{
+					R_list.push_back(std::make_pair(dist, object));
+				}
+			}
+		}
+	}
+
+	return R_list;
+}

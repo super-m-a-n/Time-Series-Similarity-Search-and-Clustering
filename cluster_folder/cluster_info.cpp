@@ -606,7 +606,7 @@ void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, cons
 		}
 		R /= 2;
 
-		int R2 = 0;
+		std::set<std::string> visited_set;
 
 		while(1){
 
@@ -619,7 +619,7 @@ void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, cons
 
 				//Execute range search and for each item in the set check if it is already in the map (if so, check which centroid is currently the closest)
 				// otherwise it has been found just now so add it to the map and do flag = true
-				for (auto item : lsh_frechet.range_search(*(this->centroids[i]), R, metric, R2)){
+				for (auto item : lsh_frechet.range_search_with_set(*(this->centroids[i]), R, visited_set, metric)){
 					double dist = std::get<0>(item);
 					const Abstract_Object* obj_p = std::get<1>(item);
 					std::string id = obj_p->get_name();
@@ -641,7 +641,6 @@ void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, cons
 
 			if (flag == false) break;
 
-			R2 = R;
 			R *= 2;
 
 		}

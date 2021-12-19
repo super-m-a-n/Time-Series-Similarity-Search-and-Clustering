@@ -59,6 +59,8 @@ public:
 	// By default R2 is 0 so the ring [0, R) is acually the ball with radius R 
 	std::list <std::pair <double, const Abstract_Object*> > range_search(const Abstract_Object & query_object, const int & R, double (*metric)(const Abstract_Object &, const Abstract_Object &), const int R2 = 0);
 	
+
+	std::list <std::pair <double, const Abstract_Object*> > range_search_with_set(const Abstract_Object & query_object, const int & R, std::set<std::string> & already_visited, double (*metric)(const Abstract_Object &, const Abstract_Object &));
 };
 
 #endif
