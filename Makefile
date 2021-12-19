@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS =-Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -std=c++14
+CXXFLAGS =-Wall -Wextra -Wno-unused-parameter -Wno-unused-value -Wno-unused-variable -Wno-reorder -Wno-unknown-pragmas -Wno-format-truncation -std=c++14
 CXXFLAGS += -I. -I./common -I./lsh_folder -I./hypercube_folder -I./fred/include -I./fred/src -I./cluster_folder
 OBJS_FOLDER = ./objects 
 OBJ_COMMON =  ./common/object.o ./common/assist_functions.o ./common/h_hash.o ./common/dataset.o ./common/input_check.o
@@ -38,7 +38,7 @@ clean:
 	rm -rf *.o search cluster output* $(OBJS_FOLDER)
 
 search_test: target1
-	./search -i ./data/nasd_input.csv -q ./data/nasd_query.csv -algorithm Frechet -metric continuous
+	./search -i ./data/nasd_input.csv -q ./data/nasd_query.csv -o output.txt -k 2 -L 7 -algorithm Frechet -metric continuous -delta 3
 
 
 

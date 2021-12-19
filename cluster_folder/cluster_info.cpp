@@ -598,10 +598,10 @@ void Cluster_info::frechet_range_search_clustering(const Dataset & dataset, cons
 			(this->clusters[i]).clear();
 		}
 		//Initialise R
-		int R = this->centroids[K-2]->euclidean_distance(*(this->centroids[K-1]));
+		int R = metric(*this->centroids[K-2],*(this->centroids[K-1]));
 		for (int i = 0 ; i < K ; i++){
 			for (int j = i+1 ; j < K ; j++){
-				R = min(R, (int) this->centroids[i]->euclidean_distance(*(this->centroids[j])));
+				R = min(R, (int) metric(*this->centroids[i],*(this->centroids[j])));
 			}
 		}
 		R /= 2;
