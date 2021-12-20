@@ -254,7 +254,7 @@ bool read_config_file(std::string & config_file, int & K, int & L, int & k, int 
 
 	    	char * str = strtok(line, " ");
 	    	std::string desc;	// description of line
-	    	int value;
+	    	int value = 0;
 		    int i = 0;
 
 		    while(str != NULL)

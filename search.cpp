@@ -125,6 +125,13 @@ int main(int argc, char const *argv[])
 		// However, for the approximate neighbors, the discrete frechet will be used (but in modified curves unlike the discrete frechet case)
 		metric_function = discrete_frechet;
 	}
+	else	// default
+	{
+		w = 30;									// experimental value (testing required)
+		numBuckets = floor(n/16);				// experimental value (testing required)
+		method = new lsh_struct(numBuckets);	// vector-curve lsh to be used, so create entire structure for lsh algorithm
+		metric_function = euclidean;			// metric used is euclidean distance
+	}
 
 	std::cout << "Importing Input Dataset --> ";
 	// import dataset
