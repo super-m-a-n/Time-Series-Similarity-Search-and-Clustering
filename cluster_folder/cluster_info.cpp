@@ -717,7 +717,7 @@ bool Cluster_info::update(const std::string & update_method, double (*metric)(co
 	}
 
 	iters++;
-	std::cout << "Iteration - average deviation --> " << avg_deviation << std::endl;
+	//std::cout << "Iteration - average deviation --> " << avg_deviation << std::endl;
 
 	if (iters >= max_iters)		// iteration threshold, in case of bouncing around local minima, deviation not becoming small enough
 		return true;

@@ -89,7 +89,7 @@ int main(int argc, char const *argv[])
 	// depending on algorithm used, method pointer will point to necessary structure
 	if (algorithm == "LSH")
 	{
-		w = 30;									// experimental value (testing required)
+		w = 20;									// experimental value (testing required)
 		numBuckets = floor(n/16);				// experimental value (testing required)
 		method = new lsh_struct(numBuckets);	// vector-curve lsh to be used, so create entire structure for lsh algorithm
 		metric_function = euclidean;			// metric used is euclidean distance
