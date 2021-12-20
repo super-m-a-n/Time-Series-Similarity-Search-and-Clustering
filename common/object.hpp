@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <list>
 #include "params.hpp"
 
 class Object;
@@ -179,10 +180,16 @@ public:
 	std::vector <std::pair <float, float> > remove_dupls(std::vector <std::pair <int, int> > & snapped_curve) const;
 	// pads given vector of grid points if necessary
 	void pad(std::vector <std::pair <float, float> > & grid_curve) const;
-  Abstract_Object * to_grid_curve(const std::vector<double>& t) const;
+  	Abstract_Object * to_grid_curve(const std::vector<double>& t) const;
+	
+	std::list<std::pair<int, int> > best_traversal(const time_series* P) const;
+
+	std::vector <std::pair <float, float> > mean_curve_without_filtering(const time_series * P) const;
+
 	// calculates optimal traversal through backtracking from discrete frechet dp array
 	// then uses the optimal traversal to return the mean curve of caller and argument time series
 	Abstract_Object * mean_curve(const time_series * P) const;
+
 };
 
 

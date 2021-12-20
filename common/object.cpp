@@ -616,8 +616,7 @@ int argmin(T x, T y, T z){
 	return pos;
 }
 
-Abstract_Object * time_series::mean_curve(const time_series * P) const
-{
+std::list<std::pair<int, int> > time_series::best_traversal(const time_series* P) const{
 	// a vector of vectors that will serve as the 2D array for dynamic programming
 	std::vector <std::vector <double> > OPT(this->get_complexity(), std::vector <double> (P->get_complexity()));
 	// initialize first square at (0,0)
@@ -675,8 +674,35 @@ Abstract_Object * time_series::mean_curve(const time_series * P) const
 
 	}
 
+	return best_traversal;
+}
+
+std::vector <std::pair <float, float> > time_series::mean_curve_without_filtering(const time_series * P) const
+{
+	
+	std::list <std::pair <int, int> > best_traversal = this->best_traversal(P);
 	// compute the mean curve from best traversal
 	std::vector <std::pair <float, float> > mean_curve;
+
+	for (auto const& index_pair : best_traversal)
+	{
+		const std::pair <float, float> & caller_curve_point = this->get_ith(std::get<0>(index_pair));
+		const std::pair <float, float> & argument_curve_point = P->get_ith(std::get<1>(index_pair));
+
+		float x_value = (std::get<0>(caller_curve_point) + std::get<0>(argument_curve_point)) / 2; 
+		float y_value = (std::get<1>(caller_curve_point) + std::get<1>(argument_curve_point)) / 2;
+		mean_curve.push_back(std::make_pair(x_value, y_value));
+	}
+	return mean_curve;
+}
+
+
+Abstract_Object * time_series::mean_curve(const time_series * P) const
+{
+	
+	std::list <std::pair <int, int> > best_traversal = this->best_traversal(P);
+	// compute the mean curve from best traversal
+	std::vector <std::pair <float, float> > mean_curve = this->mean_curve_without_filtering(P);
 
 	for (auto const& index_pair : best_traversal)
 	{
