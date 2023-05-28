@@ -19,7 +19,7 @@ The implemented clustering algorithms follow the general principle of centroid-b
 * Range search for approximate nearest centroid (using LSH or Hypercube random projection algorithms on time-series)
 
 ### Update:
-* Mean Curve method
+* Mean Curve of time-series assigned to each centroid
 
 The Silhouette metric is used for the evaluation of the quality of the clustering.
 
